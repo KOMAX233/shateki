@@ -87,7 +87,7 @@ int main(void) {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    bool res = loadOBJ("sheet.obj", vertices, uvs, normals);
+    bool res = loadOBJ("cube.obj", vertices, uvs, normals);
 
     if (!res) {
         fprintf(stderr, "Failed to load OBJ file\n");
@@ -96,10 +96,10 @@ int main(void) {
         return -1;
     }
 
-	// output vertices of sheet
-	for (const auto& vertex : vertices) {
-		cout << "Vertex (" << vertex.x << ", " << vertex.y << ", "<< vertex.z << ")" << endl;
-	}
+    // output vertices of sheet
+    for (const auto& vertex : vertices) {
+        cout << "Vertex (" << vertex.x << ", " << vertex.y << ", "<< vertex.z << ")" << endl;
+    }
 
     // Generate random points on the surface
     int numVoronoiPoints = 5; // Specify the number of Voronoi regions
@@ -194,8 +194,7 @@ int main(void) {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS &&
-        glfwWindowShouldClose(window) == 0);
+    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0);
 
     glDeleteBuffers(1, &vertexbuffer);
     glDeleteBuffers(1, &uvbuffer);
