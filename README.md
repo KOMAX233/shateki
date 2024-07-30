@@ -1,5 +1,11 @@
 # Shateki: Japanese gun shooting game with Voronoi diagram and mesh generation in fracture simulation
 
+# Specification
+- opengl is used
+- voronoi diagram using sweep line is used
+- object2 assume impact point is center of the front surface of the sheet
+- 
+
 ## Objectives
 
 1. Detect collisions between the bullet and the 2D sheet, and find the impact location.
