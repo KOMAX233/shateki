@@ -4,7 +4,7 @@
 - opengl is used
 - voronoi diagram using sweep line is used
 - object2 assume impact point is center of the front surface of the sheet
-- 
+- seeing 36 vertices because each face is split into triangle which is 3 vertices, 6 faces, 12 triangles, 36 vertices.
 
 ## Objectives
 

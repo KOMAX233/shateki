@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <set>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -18,6 +19,15 @@ using namespace glm;
 using namespace std;
 
 GLFWwindow* window;
+
+// Comparator for glm::vec3 to be used in std::set
+struct Vec3Compare {
+    bool operator() (const glm::vec3& lhs, const glm::vec3& rhs) const {
+        if (lhs.x != rhs.x) return lhs.x < rhs.x;
+        if (lhs.y != rhs.y) return lhs.y < rhs.y;
+        return lhs.z < rhs.z;
+    }
+};
 
 std::vector<Point> generateRandomPointsOnSurface(const std::vector<glm::vec3>& vertices, int numPoints) {
     std::vector<Point> points;
@@ -96,9 +106,13 @@ int main(void) {
         return -1;
     }
 
-    // output vertices of sheet
-    for (const auto& vertex : vertices) {
-        cout << "Vertex (" << vertex.x << ", " << vertex.y << ", "<< vertex.z << ")" << endl;
+    // Store unique vertices in a set
+    std::set<glm::vec3, Vec3Compare> uniqueVertices(vertices.begin(), vertices.end());
+
+    // Output unique vertices
+    cout << "Number of unique vertices in sheet: " << uniqueVertices.size() << endl;
+    for (const auto& vertex : uniqueVertices) {
+        cout << "Vertex (" << vertex.x << ", " << vertex.y << ", " << vertex.z << ")" << endl;
     }
 
     // Generate random points on the surface
@@ -106,9 +120,9 @@ int main(void) {
     std::vector<Point> points2D = generateRandomPointsOnSurface(vertices, numVoronoiPoints);
 
     // Construct and output Voronoi diagram
-    VoronoiDiagram voronoiDiagram;
-    voronoiDiagram.computeVoronoi(points2D);
-    voronoiDiagram.outputRegions();
+    // VoronoiDiagram voronoiDiagram;
+    // voronoiDiagram.computeVoronoi(points2D);
+    // voronoiDiagram.outputRegions();
 
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
@@ -189,7 +203,7 @@ int main(void) {
         glDisableVertexAttribArray(2);
 
         // Render Voronoi vertices
-        voronoiDiagram.renderVoronoi();
+        // voronoiDiagram.renderVoronoi();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
