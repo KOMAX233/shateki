@@ -87,7 +87,7 @@ int main(void) {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> uvs;
     std::vector<glm::vec3> normals;
-    bool res = loadOBJ("cube.obj", vertices, uvs, normals);
+    bool res = loadOBJ("sheet.obj", vertices, uvs, normals);
 
     if (!res) {
         fprintf(stderr, "Failed to load OBJ file\n");
