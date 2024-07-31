@@ -29,18 +29,6 @@ struct Vec3Compare {
     }
 };
 
-std::vector<Point> generateRandomPointsOnSurface(const std::vector<glm::vec3>& vertices, int numPoints) {
-    std::vector<Point> points;
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> disX(-1.0, 1.0);
-    std::uniform_real_distribution<> disY(-1.0, 1.0);
-
-    for (int i = 0; i < numPoints; ++i) {
-        points.push_back({ disX(gen), disY(gen) });
-    }
-    return points;
-}
 
 int main(void) {
     if (!glfwInit()) {
@@ -117,22 +105,19 @@ int main(void) {
 
     // Generate random points on the surface
     int numVoronoiPoints = 5; // Specify the number of Voronoi regions
-    std::vector<Point> points2D = generateRandomPointsOnSurface(vertices, numVoronoiPoints);
+    std::vector<Point> points2D = generateRandomPoints(numVoronoiPoints, -1.0, 1.0, -1.0, 1.0);
 	for (const auto& vertex : points2D) {
         cout << "Vertex (" << vertex.x << ", " << vertex.y << ")" << endl;
     }
 
-    // Sample input points
-    vector<Point> points = { { 0.2, 0.5 }, { 0.4, 0.5 }, { 0.7, 0.2 }, { 0.5, 0.7 } };
     // Construct Voronoi Diagram
-    vector<Region> voronoiRegions = voronoiSweepLine(points);
+    vector<Region> voronoiRegions = voronoiSweepLine(points2D);
     // Display Voronoi regions
     for (int i = 0; i < voronoiRegions.size(); ++i) {
         cout << "Voronoi Region #" << i + 1 << ": Site ("
             << voronoiRegions[i].site.x << ", "
             << voronoiRegions[i].site.y << ")" << endl;
-        for (const Point& vertex :
-            voronoiRegions[i].vertices) {
+        for (const Point& vertex : voronoiRegions[i].vertices) {
             cout << "Vertex (" << vertex.x << ", "
                 << vertex.y << ")" << endl;
         }
