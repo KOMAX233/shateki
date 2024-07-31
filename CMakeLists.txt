@@ -50,6 +50,8 @@ add_definitions(
 # shateki
 add_executable(shateki
     src/shateki.cpp
+    src/VoronoiDiagram.cpp
+    src/VoronoiDiagram.h
     common/shader.cpp
     common/shader.hpp
     common/controls.cpp
@@ -59,8 +61,10 @@ add_executable(shateki
     common/objloader.cpp
     common/objloader.hpp
     
-    src/StandardShading.vertexshader
-    src/StandardShading.fragmentshader
+    src/PointVertexShader.vertexshader
+    src/PointFragmentShader.fragmentshader
+    src/RectangleVertexShader.vertexshader
+    src/RectangleFragmentShader.fragmentshader
 )
 target_link_libraries(shateki
     ${ALL_LIBS}
