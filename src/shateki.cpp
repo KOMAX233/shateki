@@ -118,11 +118,26 @@ int main(void) {
     // Generate random points on the surface
     int numVoronoiPoints = 5; // Specify the number of Voronoi regions
     std::vector<Point> points2D = generateRandomPointsOnSurface(vertices, numVoronoiPoints);
+	for (const auto& vertex : points2D) {
+        cout << "Vertex (" << vertex.x << ", " << vertex.y << ")" << endl;
+    }
 
-    // Construct and output Voronoi diagram
-    // VoronoiDiagram voronoiDiagram;
-    // voronoiDiagram.computeVoronoi(points2D);
-    // voronoiDiagram.outputRegions();
+    // Sample input points
+    vector<Point> points = { { 0.2, 0.5 }, { 0.4, 0.5 }, { 0.7, 0.2 }, { 0.5, 0.7 } };
+    // Construct Voronoi Diagram
+    vector<Region> voronoiRegions = voronoiSweepLine(points);
+    // Display Voronoi regions
+    for (int i = 0; i < voronoiRegions.size(); ++i) {
+        cout << "Voronoi Region #" << i + 1 << ": Site ("
+            << voronoiRegions[i].site.x << ", "
+            << voronoiRegions[i].site.y << ")" << endl;
+        for (const Point& vertex :
+            voronoiRegions[i].vertices) {
+            cout << "Vertex (" << vertex.x << ", "
+                << vertex.y << ")" << endl;
+        }
+        cout << endl;
+    }
 
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
