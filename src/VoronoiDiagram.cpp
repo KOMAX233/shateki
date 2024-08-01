@@ -1,5 +1,3 @@
-// voronoi.cpp
-
 #include "VoronoiDiagram.h"
 
 int VoronoiPointCompare(const void* p1, const void* p2)

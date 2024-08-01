@@ -144,10 +144,14 @@ int main() {
 
     glBindVertexArray(0);
 
+    // task 3
     // Generate Voronoi points
     vector<VoronoiPoint*> points;
-    int numVoronoiPoints = 50;
-    for (auto point : generateRandomPoints(numVoronoiPoints, -0.5, 0.5, -0.5, 0.5)) {
+    int numVoronoiPoints = 20;
+    // move towards impact point 
+    VoronoiPoint impactP = { 0, 0 };
+    // generate random points and limit them within 0.1 range in the impact point
+    for (auto point : generateRandomPoints(numVoronoiPoints, impactP.x - 0.1, impactP.x + 0.1, impactP.y - 0.1, impactP.y + 0.1)) {
         points.push_back(point);
     }
 
@@ -195,7 +199,7 @@ int main() {
     }
 
     // Main loop
-    while (!glfwWindowShouldClose(window)) {
+    while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
         // Render here
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

@@ -8,15 +8,18 @@
 - from camera direction, z is positive, front is z=0, back is z=-0.2
 (-1,1) (1,1)
 (-1,-1) (1,-1)
+task3
+- assume number of sites to randomly generate is 5
+- move random points in the -0.1, 0.1 range to the impact point in x and y
 - 
 
 ## Objectives
 
 1. Detect collisions between the bullet and the 2D sheet, and find the impact location.
 
-2. Construct Voronoi diagram generation function with a given number of seeds.
+2. Construct Voronoi diagram generation function with a given number of seeds (completed).
 
-3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points.
+3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
 
 4. Create new objects for each cell in the Voronoi diagram.
 
