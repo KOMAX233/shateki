@@ -32,6 +32,57 @@ void printVertices(const vector<Vertex>& vertices) {
     }
 }
 
+Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
+
+    // Front polygon at z=scale
+    for (const auto& point : pointList) {
+        Vertex v(glm::vec3(point.x, point.y, scale), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
+        vertices.push_back(v);
+    }
+
+    // Back polygon at z=-scale
+    for (const auto& point : pointList) {
+        Vertex v(glm::vec3(point.x, point.y, -scale), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f));
+        vertices.push_back(v);
+    }
+
+    // Front polygon indices (triangulation)
+    for (size_t i = 1; i < pointList.size() - 1; ++i) {
+        indices.push_back(0);
+        indices.push_back(i);
+        indices.push_back(i + 1);
+    }
+
+    // Back polygon indices (triangulation)
+    size_t offset = pointList.size();
+    for (size_t i = 1; i < pointList.size() - 1; ++i) {
+        indices.push_back(offset);
+        indices.push_back(offset + i + 1);
+        indices.push_back(offset + i);
+    }
+
+    // Gap polygons indices
+    for (size_t i = 0; i < pointList.size(); ++i) {
+        size_t j = (i + 1) % pointList.size();
+
+        size_t frontOffset = 0;
+        size_t backOffset = pointList.size();
+
+        // Two triangles for each quad
+        indices.push_back(frontOffset + i);
+        indices.push_back(backOffset + i);
+        indices.push_back(backOffset + j);
+
+        indices.push_back(frontOffset + i);
+        indices.push_back(backOffset + j);
+        indices.push_back(frontOffset + j);
+    }
+
+    return Mesh(vertices, indices);
+}
+
 int main() {
     if (!glfwInit()) {
         cerr << "Failed to initialize GLFW\n";
@@ -134,14 +185,23 @@ int main() {
 	// Create destructible objects for each site in the Voronoi diagram
     vector<DestructibleObject> destructibleObjects;
 	for (const auto& edge : edges) {
-        vector<Vertex> siteVertices;
-        // Assume GenerateMesh creates a mesh from the site vertices
-        siteVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        siteVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        Mesh siteMesh(siteVertices, {});
+        vector<glm::vec2> siteVertices;
+        siteVertices.push_back(glm::vec2(edge.VertexA.x, edge.VertexA.y));
+		siteVertices.push_back(glm::vec2(edge.VertexB.x, edge.VertexB.y));
+		
+        Mesh siteMesh = GenerateMesh(siteVertices, 0.1f);
         destructibleObjects.push_back(DestructibleObject(siteMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
-        // cout << "New Destructible Object Vertices:" << endl;
-        // printVertices(siteVertices);
+
+        //cout << "New Destructible Object Vertices:" << endl;
+        //printVertices(meshVertices);
+    }
+
+    // Creating the edges for the original square's front and back faces
+    for (const auto& edge : edges) {
+        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, -0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, -0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
     }
 
     Mesh edgeMesh(edgeVertices, {});

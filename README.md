@@ -12,6 +12,8 @@ task3
 - assume number of sites to randomly generate is 5
 - move random points in the -0.1, 0.1 range to the impact point in x and y
 - assume point size is 3.0
+task 5
+- assume the depth of square is 0.1(given value)
 - 
 
 ## Objectives
@@ -22,9 +24,9 @@ task3
 
 3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
 
-4. Create new objects for each cell in the Voronoi diagram.
+4. Create new objects for each cell in the Voronoi diagram (completed).
 
-5. Set depth Z in the direction of normals of with given value to every seed and add the new vertice to vertice list.
+5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list.
 
 6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list.
 
