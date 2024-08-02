@@ -7,6 +7,7 @@
 #include "common/controls.hpp"
 #include "VoronoiDiagram.h"
 #include "Mesh.h"
+#include "DestructibleObject.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -23,6 +24,12 @@ vector<VoronoiPoint*> generateRandomPoints(int numPoints, float minX, float maxX
         points.push_back(new VoronoiPoint(x, y));
     }
     return points;
+}
+
+void printVertices(const vector<Vertex>& vertices) {
+    for (const auto& vertex : vertices) {
+        cout << "Vertex Position: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")" << endl;
+    }
 }
 
 int main() {
@@ -60,15 +67,15 @@ int main() {
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 
-	// 2D plane
+	// 2D plane vertices and indices
     vector<Vertex> squareVertices = {
         Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
         Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
         Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
         Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
     };
-	
-	vector<unsigned int> squareIndices = {
+
+    vector<unsigned int> squareIndices = {
         0, 1, 2,
         2, 3, 0
     };
@@ -94,6 +101,10 @@ int main() {
     // };
 
     Mesh squareMesh(squareVertices, squareIndices);
+    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f));
+
+    cout << "Original Square Vertices:" << endl;
+    printVertices(squareVertices);
 
     // Define point vertices
     vector<Vertex> pointVertices;
@@ -119,6 +130,19 @@ int main() {
         edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
         edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
     }
+    
+	// Create destructible objects for each site in the Voronoi diagram
+    vector<DestructibleObject> destructibleObjects;
+	for (const auto& edge : edges) {
+        vector<Vertex> siteVertices;
+        // Assume GenerateMesh creates a mesh from the site vertices
+        siteVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        siteVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        Mesh siteMesh(siteVertices, {});
+        destructibleObjects.push_back(DestructibleObject(siteMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
+        cout << "New Destructible Object Vertices:" << endl;
+        printVertices(siteVertices);
+    }
 
     Mesh edgeMesh(edgeVertices, {});
 
@@ -135,31 +159,39 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Draw square
-        glUseProgram(squareShader);
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        squareMesh.Draw(squareShader);
+        // // Draw square
+        // glUseProgram(squareShader);
+        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        // squareMesh.Draw(squareShader);
 
-        // Draw points
-        glDisable(GL_DEPTH_TEST);
-        glUseProgram(pointShader);
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        glPointSize(3.0f);
-        pointMesh.Draw(pointShader);
-        glEnable(GL_DEPTH_TEST);
+        // // Draw points
+        // glDisable(GL_DEPTH_TEST);
+        // glUseProgram(pointShader);
+        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        // glPointSize(3.0f);
+        // pointMesh.Draw(pointShader);
+        // glEnable(GL_DEPTH_TEST);
 
-        // Draw edges
-        glDisable(GL_DEPTH_TEST);
-        glUseProgram(edgeShader);
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        edgeMesh.Draw(edgeShader);
-        glEnable(GL_DEPTH_TEST);
+        // // Draw edges
+        // glDisable(GL_DEPTH_TEST);
+        // glUseProgram(edgeShader);
+        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        // edgeMesh.Draw(edgeShader);
+        // glEnable(GL_DEPTH_TEST);
+
+        // Draw the original square
+        originalSquare.Draw(squareShader, ViewMatrix, ProjectionMatrix);
+
+		// Draw the destructible objects
+        for (auto& destructibleObject : destructibleObjects) {
+            destructibleObject.Draw(edgeShader, ViewMatrix, ProjectionMatrix);
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();
