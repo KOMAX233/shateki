@@ -52,6 +52,8 @@ add_executable(shateki
     src/shateki.cpp
     src/VoronoiDiagram.cpp
     src/VoronoiDiagram.h
+    src/Mesh.cpp
+    src/Mesh.h
     common/shader.cpp
     common/shader.hpp
     common/controls.cpp
@@ -65,6 +67,8 @@ add_executable(shateki
     src/PointFragmentShader.fragmentshader
     src/RectangleVertexShader.vertexshader
     src/RectangleFragmentShader.fragmentshader
+    src/EdgeVertexShader.vertexshader
+    src/EdgeFragmentShader.fragmentshader
 )
 target_link_libraries(shateki
     ${ALL_LIBS}

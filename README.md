@@ -11,6 +11,7 @@
 task3
 - assume number of sites to randomly generate is 5
 - move random points in the -0.1, 0.1 range to the impact point in x and y
+- assume point size is 3.0
 - 
 
 ## Objectives
