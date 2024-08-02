@@ -103,8 +103,8 @@ int main() {
     Mesh squareMesh(squareVertices, squareIndices);
     DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f));
 
-    cout << "Original Square Vertices:" << endl;
-    printVertices(squareVertices);
+    // cout << "Original Square Vertices:" << endl;
+    // printVertices(squareVertices);
 
     // Define point vertices
     vector<Vertex> pointVertices;
@@ -140,8 +140,8 @@ int main() {
         siteVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
         Mesh siteMesh(siteVertices, {});
         destructibleObjects.push_back(DestructibleObject(siteMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
-        cout << "New Destructible Object Vertices:" << endl;
-        printVertices(siteVertices);
+        // cout << "New Destructible Object Vertices:" << endl;
+        // printVertices(siteVertices);
     }
 
     Mesh edgeMesh(edgeVertices, {});
