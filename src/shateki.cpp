@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "common/shader.hpp"
+#include "common/controls.hpp"
 #include "VoronoiDiagram.h"
 #include "Mesh.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -36,7 +37,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(800, 600, "Shateki!!!!!", NULL, NULL);
+    window = glfwCreateWindow(1024, 768, "Shateki!!!!!", NULL, NULL);
     if (!window) {
         cerr << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -52,22 +53,45 @@ int main() {
     }
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwPollEvents();
+    glfwSetCursorPos(window, 1024 / 2, 768 / 2);
 
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 
-    // Define square vertices and indices
+	// 2D plane
     vector<Vertex> squareVertices = {
         Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
         Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
         Vertex(glm::vec3(0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
         Vertex(glm::vec3(-0.5f, 0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
     };
-
-    vector<unsigned int> squareIndices = {
+	
+	vector<unsigned int> squareIndices = {
         0, 1, 2,
         2, 3, 0
     };
+    // Define square vertices and indices (3D cube)
+    // vector<Vertex> squareVertices = {
+    //     Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+    //     Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+    //     Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+    //     Vertex(glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+    //     Vertex(glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+    //     Vertex(glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+    //     Vertex(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+    //     Vertex(glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
+    // };
+
+    // vector<unsigned int> squareIndices = {
+    //     0, 1, 2, 2, 3, 0, // Back face
+    //     4, 5, 6, 6, 7, 4, // Front face
+    //     0, 1, 5, 5, 4, 0, // Bottom face
+    //     2, 3, 7, 7, 6, 2, // Top face
+    //     0, 3, 7, 7, 4, 0, // Left face
+    //     1, 2, 6, 6, 5, 1  // Right face
+    // };
 
     Mesh squareMesh(squareVertices, squareIndices);
 
@@ -93,9 +117,7 @@ int main() {
     vector<Vertex> edgeVertices;
     for (const auto& edge : edges) {
         edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        //cout << edge.VertexA.x << ", " << edge.VertexA.y << endl;
         edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        //cout << edge.VertexB.x << ", " << edge.VertexB.y << endl;
     }
 
     Mesh edgeMesh(edgeVertices, {});
@@ -104,27 +126,28 @@ int main() {
     GLuint pointShader = LoadShaders("PointVertexShader.vertexshader", "PointFragmentShader.fragmentshader");
     GLuint edgeShader = LoadShaders("EdgeVertexShader.vertexshader", "EdgeFragmentShader.fragmentshader");
 
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // Compute the MVP matrix from keyboard and mouse input
+        computeMatricesFromInputs();
+        glm::mat4 ProjectionMatrix = getProjectionMatrix();
+        glm::mat4 ViewMatrix = getViewMatrix();
+        glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
-        glm::mat4 model = glm::mat4(1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw square
         glUseProgram(squareShader);
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
         squareMesh.Draw(squareShader);
 
         // Draw points
         glDisable(GL_DEPTH_TEST);
         glUseProgram(pointShader);
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
         glPointSize(3.0f);
         pointMesh.Draw(pointShader);
         glEnable(GL_DEPTH_TEST);
@@ -132,9 +155,9 @@ int main() {
         // Draw edges
         glDisable(GL_DEPTH_TEST);
         glUseProgram(edgeShader);
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(model));
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
         edgeMesh.Draw(edgeShader);
         glEnable(GL_DEPTH_TEST);
 
