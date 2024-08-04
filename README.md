@@ -8,6 +8,9 @@
 - from camera direction, z is positive, front is z=0, back is z=-0.2
 (-1,1) (1,1)
 (-1,-1) (1,-1)
+
+assume camera initial position 0,0,3, horizontal angle 3.14f, verticle 0.0f
+
 task3
 - assume number of sites to randomly generate is 50
 - move random points in the -0.1, 0.1 range to the impact point in x and y
@@ -100,7 +103,7 @@ assign random color at object construction to see the fragments more clearly
 
 ## Objectives
 
-1. Detect collisions between the bullet and the 2D sheet, and find the impact location.
+1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
 
 2. Construct Voronoi diagram generation function with a given number of seeds (completed).
 

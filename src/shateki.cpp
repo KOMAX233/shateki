@@ -434,7 +434,7 @@ int main() {
             originalSquare = DestructibleObject(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
             collisionDetected = false; // Reset collision
             // Reset camera position and angle
-            setCameraPosition(glm::vec3(0, 0, 5));
+            setCameraPosition(glm::vec3(0, 0, 3));
             setCameraDirection(3.14f, 0.0f);
         }
 
