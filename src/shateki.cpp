@@ -1,22 +1,33 @@
 #include <iostream>
 #include <vector>
+#include <ctime>
+#include <cmath>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
-#include "common/shader.hpp"
-#include "common/controls.hpp"
-#include "VoronoiDiagram.h"
-#include "Mesh.h"
-#include "DestructibleObject.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "common/shader.hpp"
+#include "common/controls.hpp"
+#include "Mesh.h"
+#include "DestructibleObject.h"
+
+#define JC_VORONOI_IMPLEMENTATION
+#define JC_VORONOI_CLIP_IMPLEMENTATION
+#include "VoronoiDiagram.h"
+#include "VoronoiDiagramClip.h"
 
 using namespace std;
 
 GLFWwindow* window;
 
+struct VoronoiPoint {
+    float x, y;
+    VoronoiPoint(float x, float y) : x(x), y(y) {}
+};
+
 vector<VoronoiPoint*> generateRandomPoints(int numPoints, float minX, float maxX, float minY, float maxY) {
-    srand(time(0));
+    srand(static_cast<unsigned>(time(0)));
     vector<VoronoiPoint*> points;
     for (int i = 0; i < numPoints; ++i) {
         float x = minX + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (maxX - minX)));
@@ -29,6 +40,20 @@ vector<VoronoiPoint*> generateRandomPoints(int numPoints, float minX, float maxX
 void printVertices(const vector<Vertex>& vertices) {
     for (const auto& vertex : vertices) {
         cout << "Vertex Position: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")" << endl;
+    }
+}
+
+void printVoronoiRegions(const jcv_diagram& diagram) {
+    const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+    for (int i = 0; i < diagram.numsites; ++i) {
+        const jcv_site* site = &sites[i];
+        cout << "Region " << i << " with site (" << site->p.x << ", " << site->p.y << "):" << endl;
+        const jcv_graphedge* edge = site->edges;
+        while (edge) {
+            cout << "  Edge from (" << edge->pos[0].x << ", " << edge->pos[0].y << ") to ("
+                << edge->pos[1].x << ", " << edge->pos[1].y << ")" << endl;
+            edge = edge->next;
+        }
     }
 }
 
@@ -118,7 +143,7 @@ int main() {
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 
-	// 2D plane vertices and indices
+    // 2D plane vertices and indices
     vector<Vertex> squareVertices = {
         Vertex(glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
         Vertex(glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
@@ -130,81 +155,68 @@ int main() {
         0, 1, 2,
         2, 3, 0
     };
-    // Define square vertices and indices (3D cube)
-    // vector<Vertex> squareVertices = {
-    //     Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-    //     Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-    //     Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-    //     Vertex(glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-    //     Vertex(glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-    //     Vertex(glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-    //     Vertex(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-    //     Vertex(glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
-    // };
-
-    // vector<unsigned int> squareIndices = {
-    //     0, 1, 2, 2, 3, 0, // Back face
-    //     4, 5, 6, 6, 7, 4, // Front face
-    //     0, 1, 5, 5, 4, 0, // Bottom face
-    //     2, 3, 7, 7, 6, 2, // Top face
-    //     0, 3, 7, 7, 4, 0, // Left face
-    //     1, 2, 6, 6, 5, 1  // Right face
-    // };
 
     Mesh squareMesh(squareVertices, squareIndices);
     DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f));
 
-    // cout << "Original Square Vertices:" << endl;
-    // printVertices(squareVertices);
-
     // Define point vertices
     vector<Vertex> pointVertices;
-    // task 3
-    // Generate Voronoi points
-	// generate random points and limit them within 0.1 range in the impact point
-    // move towards impact point 
     VoronoiPoint impactP = { 0, 0 };
-	// generate random points and limit them within 0.1 range in the impact point
-	vector<VoronoiPoint*> points = generateRandomPoints(5, impactP.x - 0.1, impactP.x + 0.1, impactP.y - 0.1, impactP.y + 0.1);
+    vector<VoronoiPoint*> points = generateRandomPoints(5, impactP.x - 0.1, impactP.x + 0.1, impactP.y - 0.1, impactP.y + 0.1);
     for (const auto& point : points) {
         pointVertices.push_back(Vertex(glm::vec3(point->x, point->y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
     }
 
     Mesh pointMesh(pointVertices, {}, true);
 
+    // Define the bounding box (square)
+    jcv_rect bounding_box;
+    bounding_box.min.x = -0.5f;
+    bounding_box.min.y = -0.5f;
+    bounding_box.max.x = 0.5f;
+    bounding_box.max.y = 0.5f;
+
+    // Convert points to jcv_point
+    std::vector<jcv_point> jcv_points(points.size());
+    for (size_t i = 0; i < points.size(); ++i) {
+        jcv_points[i].x = points[i]->x;
+        jcv_points[i].y = points[i]->y;
+    }
+
+    // Generate Voronoi diagram
+    jcv_diagram diagram;
+    memset(&diagram, 0, sizeof(jcv_diagram));
+    jcv_diagram_generate(static_cast<int>(jcv_points.size()), &jcv_points[0], &bounding_box, nullptr, &diagram);
+
+    // Print Voronoi regions
+    printVoronoiRegions(diagram);
+
     // Generate Voronoi edges
-    Voronoi voronoi;
-    vector<VEdge> edges = voronoi.ComputeVoronoiGraph(points, -0.5, 0.5);
-
     vector<Vertex> edgeVertices;
-    for (const auto& edge : edges) {
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-    }
-    
-	// Create destructible objects for each site in the Voronoi diagram
-    vector<DestructibleObject> destructibleObjects;
-	for (const auto& edge : edges) {
-        vector<glm::vec2> siteVertices;
-        siteVertices.push_back(glm::vec2(edge.VertexA.x, edge.VertexA.y));
-		siteVertices.push_back(glm::vec2(edge.VertexB.x, edge.VertexB.y));
-		
-        Mesh siteMesh = GenerateMesh(siteVertices, 0.1f);
-        destructibleObjects.push_back(DestructibleObject(siteMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
-
-        //cout << "New Destructible Object Vertices:" << endl;
-        //printVertices(meshVertices);
-    }
-
-    // Creating the edges for the original square's front and back faces
-    for (const auto& edge : edges) {
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexA.x, edge.VertexA.y, -0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        edgeVertices.push_back(Vertex(glm::vec3(edge.VertexB.x, edge.VertexB.y, -0.1f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+    const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
+    while (edge) {
+        edgeVertices.push_back(Vertex(glm::vec3(edge->pos[0].x, edge->pos[0].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edgeVertices.push_back(Vertex(glm::vec3(edge->pos[1].x, edge->pos[1].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edge = jcv_diagram_get_next_edge(edge);
     }
 
     Mesh edgeMesh(edgeVertices, {});
+
+    // Create destructible objects for each Voronoi region
+    const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+    vector<DestructibleObject> destructibleObjects;
+    for (int i = 0; i < diagram.numsites; ++i) {
+        const jcv_site* site = &sites[i];
+        vector<glm::vec2> regionVertices;
+        const jcv_graphedge* edge = site->edges;
+        while (edge) {
+            regionVertices.push_back(glm::vec2(edge->pos[0].x, edge->pos[0].y));
+            regionVertices.push_back(glm::vec2(edge->pos[1].x, edge->pos[1].y));
+            edge = edge->next;
+        }
+        Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
+        destructibleObjects.push_back(DestructibleObject(regionMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
+    }
 
     GLuint squareShader = LoadShaders("RectangleVertexShader.vertexshader", "RectangleFragmentShader.fragmentshader");
     GLuint pointShader = LoadShaders("PointVertexShader.vertexshader", "PointFragmentShader.fragmentshader");
@@ -219,36 +231,36 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // // Draw square
-        // glUseProgram(squareShader);
-        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        // squareMesh.Draw(squareShader);
+        // Draw square
+        glUseProgram(squareShader);
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        squareMesh.Draw(squareShader);
 
-        // // Draw points
-        // glDisable(GL_DEPTH_TEST);
-        // glUseProgram(pointShader);
-        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        // glPointSize(3.0f);
-        // pointMesh.Draw(pointShader);
-        // glEnable(GL_DEPTH_TEST);
+        // Draw points
+        glDisable(GL_DEPTH_TEST);
+        glUseProgram(pointShader);
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        glPointSize(3.0f);
+        pointMesh.Draw(pointShader);
+        glEnable(GL_DEPTH_TEST);
 
-        // // Draw edges
-        // glDisable(GL_DEPTH_TEST);
-        // glUseProgram(edgeShader);
-        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
-        // glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
-        // edgeMesh.Draw(edgeShader);
-        // glEnable(GL_DEPTH_TEST);
+        // Draw edges
+        glDisable(GL_DEPTH_TEST);
+        glUseProgram(edgeShader);
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        edgeMesh.Draw(edgeShader);
+        glEnable(GL_DEPTH_TEST);
 
         // Draw the original square
         originalSquare.Draw(squareShader, ViewMatrix, ProjectionMatrix);
 
-		// Draw the destructible objects
+        // Draw the destructible objects
         for (auto& destructibleObject : destructibleObjects) {
             destructibleObject.Draw(edgeShader, ViewMatrix, ProjectionMatrix);
         }
@@ -261,6 +273,7 @@ int main() {
         delete point;
     }
 
+    jcv_diagram_free(&diagram);
     glfwTerminate();
     return 0;
 }

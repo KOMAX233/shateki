@@ -50,8 +50,8 @@ add_definitions(
 # shateki
 add_executable(shateki
     src/shateki.cpp
-    src/VoronoiDiagram.cpp
     src/VoronoiDiagram.h
+    src/VoronoiDiagramClip.h
     src/Mesh.cpp
     src/Mesh.h
     common/shader.cpp

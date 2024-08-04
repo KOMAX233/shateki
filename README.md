@@ -14,7 +14,27 @@ task3
 - assume point size is 3.0
 task 5
 - assume the depth of square is 0.1(given value)
-- 
+task 6
+- add boundry edges gap polygon and vertices if x or y is equal to size of square 0.5
+task 4
+- after getting the intersections, check other vertices on the same edge, if it has other vertices on the same edge that's not corner 0.5/-0.5, connect to the one next to them, if they don't have neighbor on the same edge connect them to the corner, if theres only one vertex intersected on a square edge, genreate one to the left and one to the right. 
+
+create a new edge list
+add the new edges to the edge list with the edges from the output of compute voronoi edges
+
+create a new point list, add the vertices of all edges
+
+now all edges should be able to used for construct a region, start from one vertex, check the edges to get the next point connect to it, stop when find edge that connect back to the first point, now the edges and vertices that can a circle is used as one destructible object.
+
+repeat until sites number of new objects have been found, then pass the objects to generate mesh
+
+voronoi: vd dt duality
+fortune's algorithm vs delaunay traingle (maybe? v->f, e->e, f->v)
+Bowyer-Watson algorithm to generate dt
+https://www.mtmckenna.com/posts/2023/06/16/voronoi-diagrams
+https://cartography-playground.gitlab.io/playgrounds/triangulation-delaunay-voronoi-diagram/
+
+jc voronoi for now
 
 ## Objectives
 
