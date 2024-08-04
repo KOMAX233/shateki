@@ -36,6 +36,23 @@ https://cartography-playground.gitlab.io/playgrounds/triangulation-delaunay-voro
 
 jc voronoi for now
 
+
+task 1:
+When a sheet is hit by a bullet, the pieces of the sheet will typically have velocities influenced by the impact of the bullet. The velocity of each piece can be computed based on several factors:
+
+Initial Velocity of the Bullet: The initial velocity of the bullet imparts kinetic energy to the sheet, which is then distributed among the fragments.
+Point of Impact: The location where the bullet hits the sheet will affect how the energy is distributed. Pieces closer to the impact point will generally have higher velocities.
+Direction of Impact: The direction from which the bullet strikes the sheet will influence the initial velocities of the fragments.
+Mass and Size of Fragments: Smaller and lighter fragments will generally have higher velocities compared to larger and heavier fragments.
+
+task 8
+assume gravity is 0.1
+increase fps, decrease delta time to slow the movement
+assume 120 fps
+
+
+
+
 ## Objectives
 
 1. Detect collisions between the bullet and the 2D sheet, and find the impact location.

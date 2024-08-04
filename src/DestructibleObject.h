@@ -10,9 +10,15 @@ class DestructibleObject {
 public:
     Mesh mesh;
     glm::vec3 position;
+    glm::vec3 velocity;
 
-    DestructibleObject(const Mesh& mesh, const glm::vec3& position)
-        : mesh(mesh), position(position) {}
+    DestructibleObject(const Mesh& mesh, const glm::vec3& position, const glm::vec3& velocity)
+        : mesh(mesh), position(position), velocity(velocity) {}
+
+    void Update(float deltaTime) {
+        velocity.y -= 0.01f * deltaTime; // Apply gravity
+        position += velocity * deltaTime;
+    }
 
     void Draw(GLuint shader, const glm::mat4& viewMatrix, const glm::mat4& projectionMatrix) {
         glm::mat4 modelMatrix = glm::translate(glm::mat4(1.0f), position);

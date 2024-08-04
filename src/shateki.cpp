@@ -148,28 +148,36 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     // 2D plane vertices and indices for the initial square
+    float squareSize = 1.0f;
+    float halfSquareSize = squareSize / 2.0f;
     vector<Vertex> squareVertices = {
-        Vertex(glm::vec3(-0.5f, -0.5f, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-        Vertex(glm::vec3(0.5f, -0.5f, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-        Vertex(glm::vec3(0.5f, 0.5f, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-        Vertex(glm::vec3(-0.5f, 0.5f, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
-        Vertex(glm::vec3(-0.5f, -0.5f, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
-        Vertex(glm::vec3(0.5f, -0.5f, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
-        Vertex(glm::vec3(0.5f, 0.5f, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
-        Vertex(glm::vec3(-0.5f, 0.5f, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
+        Vertex(glm::vec3(-halfSquareSize, -halfSquareSize, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+        Vertex(glm::vec3(halfSquareSize, -halfSquareSize, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+        Vertex(glm::vec3(halfSquareSize, halfSquareSize, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+        Vertex(glm::vec3(-halfSquareSize, halfSquareSize, 0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f)),
+        Vertex(glm::vec3(-halfSquareSize, -halfSquareSize, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+        Vertex(glm::vec3(halfSquareSize, -halfSquareSize, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+        Vertex(glm::vec3(halfSquareSize, halfSquareSize, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+        Vertex(glm::vec3(-halfSquareSize, halfSquareSize, -0.1f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 1.0f))
     };
 
     vector<unsigned int> squareIndices = {
-        0, 1, 2, 2, 3, 0, // Front face
-        4, 5, 6, 6, 7, 4, // Back face
-        0, 1, 5, 5, 4, 0, // Bottom face
-        2, 3, 7, 7, 6, 2, // Top face
-        0, 3, 7, 7, 4, 0, // Left face
-        1, 2, 6, 6, 5, 1  // Right face
+        0, 1, 2, 2, 3, 0, // front
+        4, 5, 6, 6, 7, 4, // back
+        0, 1, 5, 5, 4, 0, // bottom
+        2, 3, 7, 7, 6, 2, // top
+        0, 3, 7, 7, 4, 0, // left
+        1, 2, 6, 6, 5, 1  // right
     };
 
-    Mesh squareMesh(squareVertices, squareIndices);
-    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f));
+    Mesh squareMesh = GenerateMesh({
+        glm::vec2(-halfSquareSize, -halfSquareSize),
+        glm::vec2(halfSquareSize, -halfSquareSize),
+        glm::vec2(halfSquareSize, halfSquareSize),
+        glm::vec2(-halfSquareSize, halfSquareSize)
+        }, 0.1f);
+
+    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
     // Define point vertices
     vector<Vertex> pointVertices;
@@ -183,10 +191,10 @@ int main() {
 
     // Define the bounding box (square)
     jcv_rect bounding_box;
-    bounding_box.min.x = -0.5f;
-    bounding_box.min.y = -0.5f;
-    bounding_box.max.x = 0.5f;
-    bounding_box.max.y = 0.5f;
+    bounding_box.min.x = -halfSquareSize;
+    bounding_box.min.y = -halfSquareSize;
+    bounding_box.max.x = halfSquareSize;
+    bounding_box.max.y = halfSquareSize;
 
     // Convert points to jcv_point
     std::vector<jcv_point> jcv_points(points.size());
@@ -209,7 +217,7 @@ int main() {
     while (edge) {
         edgeVertices.push_back(Vertex(glm::vec3(edge->pos[0].x, edge->pos[0].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
         edgeVertices.push_back(Vertex(glm::vec3(edge->pos[1].x, edge->pos[1].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-        edge = jcv_diagram_get_next_edge(edge);
+        edge = edge->next;
     }
 
     Mesh edgeMesh(edgeVertices, {});
@@ -249,6 +257,8 @@ int main() {
                     edge = edge->next;
                 }
 
+                // test splitted new objects movement
+                // make each piece a little bit away from each other
                 // Determine movement based on region's vertices
                 bool moveLeft = true, moveRight = true, moveUp = true, moveDown = true;
                 for (const auto& vertex : regionVertices) {
@@ -259,10 +269,10 @@ int main() {
                 }
 
                 float moveX = 0.0f, moveY = 0.0f;
-                if (moveLeft) moveX = -0.1f;
-                if (moveRight) moveX = 0.1f;
-                if (moveUp) moveY = 0.1f;
-                if (moveDown) moveY = -0.1f;
+                if (moveLeft) moveX = -0.01f;
+                if (moveRight) moveX = 0.01f;
+                if (moveUp) moveY = 0.01f;
+                if (moveDown) moveY = -0.01f;
 
                 for (auto& vertex : regionVertices) {
                     vertex.x += moveX;
@@ -270,8 +280,19 @@ int main() {
                 }
 
                 Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
-                destructibleObjects.push_back(DestructibleObject(regionMesh, glm::vec3(0.0f, 0.0f, 0.0f)));
+                glm::vec3 position(0.0f, 0.0f, 0.0f);
+
+                // Calculate initial velocity for each piece
+                glm::vec3 velocity = glm::vec3(moveX, moveY, 0.0f);
+
+                destructibleObjects.push_back(DestructibleObject(regionMesh, position, velocity));
             }
+        }
+
+        // Update positions of destructible objects
+        float deltaTime = 1.0f / 120.0f; // 120 FPS
+        for (auto& destructibleObject : destructibleObjects) {
+            destructibleObject.Update(deltaTime);
         }
 
         // Draw points
