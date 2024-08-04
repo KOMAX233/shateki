@@ -1,3 +1,5 @@
+// source: opengl-tutorial.org
+
 #ifndef CONTROLS_HPP
 #define CONTROLS_HPP
 
