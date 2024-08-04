@@ -56,14 +56,14 @@ add_executable(shateki
     common/controls.cpp
     common/controls.hpp
     
-    src/PointVertexShader.vertexshader
-    src/PointFragmentShader.fragmentshader
-    src/RectangleVertexShader.vertexshader
-    src/RectangleFragmentShader.fragmentshader
-    src/EdgeVertexShader.vertexshader
-    src/EdgeFragmentShader.fragmentshader
-    src/2dVertexShader.vertexshader
-    src/2dFragmentShader.fragmentshader
+    shaders/PointVertexShader.vertexshader
+    shaders/PointFragmentShader.fragmentshader
+    shaders/RectangleVertexShader.vertexshader
+    shaders/RectangleFragmentShader.fragmentshader
+    shaders/EdgeVertexShader.vertexshader
+    shaders/EdgeFragmentShader.fragmentshader
+    shaders/2dVertexShader.vertexshader
+    shaders/2dFragmentShader.fragmentshader
 )
 target_link_libraries(shateki
     ${ALL_LIBS}

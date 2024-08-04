@@ -392,13 +392,13 @@ int main() {
 
     // Generate sphere mesh for bullet
     Mesh sphereMesh = GenerateSphereMesh(0.05f, 36, 18);
-    vector<DestructibleObject> bullets; // Store multiple bullets
+    vector<DestructibleObject> bullets;
 
-    GLuint squareShader = LoadShaders("RectangleVertexShader.vertexshader", "RectangleFragmentShader.fragmentshader");
-    GLuint pointShader = LoadShaders("PointVertexShader.vertexshader", "PointFragmentShader.fragmentshader");
-    GLuint edgeShader = LoadShaders("EdgeVertexShader.vertexshader", "EdgeFragmentShader.fragmentshader");
-    GLuint sphereShader = LoadShaders("EdgeVertexShader.vertexshader", "EdgeFragmentShader.fragmentshader");
-    GLuint dotShader = LoadShaders("2dVertexShader.vertexshader", "2dFragmentShader.fragmentshader");
+    GLuint squareShader = LoadShaders("../shaders/RectangleVertexShader.vertexshader", "../shaders/RectangleFragmentShader.fragmentshader");
+    GLuint pointShader = LoadShaders("../shaders/PointVertexShader.vertexshader", "../shaders/PointFragmentShader.fragmentshader");
+    GLuint edgeShader = LoadShaders("../shaders/EdgeVertexShader.vertexshader", "../shaders/EdgeFragmentShader.fragmentshader");
+    GLuint sphereShader = LoadShaders("../shaders/EdgeVertexShader.vertexshader", "../shaders/EdgeFragmentShader.fragmentshader");
+    GLuint dotShader = LoadShaders("../shaders/2dVertexShader.vertexshader", "../shaders/2dFragmentShader.fragmentshader");
 
     bool voronoiGenerated = false;
     vector<DestructibleObject> destructibleObjects; // To store the destructible objects
