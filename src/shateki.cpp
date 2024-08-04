@@ -227,6 +227,96 @@ void drawAimingDot(GLuint shader) {
     dotMesh.Draw(shader);
 }
 
+void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh) {
+    vector<VoronoiPoint*> points = generateRandomPoints(5, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
+
+    // Define the bounding box (square)
+    jcv_rect bounding_box;
+    bounding_box.min.x = -halfSquareSize;
+    bounding_box.min.y = -halfSquareSize;
+    bounding_box.max.x = halfSquareSize;
+    bounding_box.max.y = halfSquareSize;
+
+    // Convert points to jcv_point
+    std::vector<jcv_point> jcv_points(points.size());
+    for (size_t i = 0; i < points.size(); ++i) {
+        jcv_points[i].x = points[i]->x;
+        jcv_points[i].y = points[i]->y;
+    }
+
+    // Generate Voronoi diagram
+    jcv_diagram diagram;
+    memset(&diagram, 0, sizeof(jcv_diagram));
+    jcv_diagram_generate(static_cast<int>(jcv_points.size()), &jcv_points[0], &bounding_box, nullptr, &diagram);
+
+    // Print Voronoi regions
+    printVoronoiRegions(diagram);
+
+    // Generate Voronoi edges
+    vector<Vertex> edgeVertices;
+    const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
+    while (edge) {
+        edgeVertices.push_back(Vertex(glm::vec3(edge->pos[0].x, edge->pos[0].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edgeVertices.push_back(Vertex(glm::vec3(edge->pos[1].x, edge->pos[1].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+        edge = edge->next;
+    }
+
+    destructibleObjects.clear(); // Clear old objects
+
+    const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+    for (int i = 0; i < diagram.numsites; ++i) {
+        const jcv_site* site = &sites[i];
+        vector<glm::vec2> regionVertices;
+        const jcv_graphedge* edge = site->edges;
+        while (edge) {
+            regionVertices.push_back(glm::vec2(edge->pos[0].x, edge->pos[0].y));
+            regionVertices.push_back(glm::vec2(edge->pos[1].x, edge->pos[1].y));
+            edge = edge->next;
+        }
+
+        // test splitted new objects movement
+        // make each piece a little bit away from each other
+        // Determine movement based on region's vertices
+        bool moveLeft = true, moveRight = true, moveUp = true, moveDown = true;
+        for (const auto& vertex : regionVertices) {
+            if (vertex.x >= 0) moveLeft = false;
+            if (vertex.x <= 0) moveRight = false;
+            if (vertex.y <= 0) moveUp = false;
+            if (vertex.y >= 0) moveDown = false;
+        }
+
+        float moveX = 0.0f, moveY = 0.0f;
+        if (moveLeft) moveX = -0.01f;
+        if (moveRight) moveX = 0.01f;
+        if (moveUp) moveY = 0.01f;
+        if (moveDown) moveY = -0.01f;
+
+        for (auto& vertex : regionVertices) {
+            vertex.x += moveX;
+            vertex.y += moveY;
+        }
+
+        Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
+        glm::vec3 position(0.0f, 0.0f, 0.0f);
+
+        // Calculate initial velocity for each piece
+        glm::vec3 velocity = glm::vec3(moveX, moveY, 0.0f);
+
+        float fragmentMass = getMass(regionVertices);
+        destructibleObjects.push_back(DestructibleObject(regionMesh, position, velocity, fragmentMass, true)); // Set affectedByGravity to true
+
+        // Print mass of each fragment
+        cout << "Mass of fragment " << i << ": " << fragmentMass << endl;
+    }
+
+    // Free memory used by the diagram
+    jcv_diagram_free(&diagram);
+
+    for (auto point : points) {
+        delete point;
+    }
+}
+
 int main() {
     if (!glfwInit()) {
         cerr << "Failed to initialize GLFW\n";
@@ -294,7 +384,7 @@ int main() {
 
     Mesh squareMesh = GenerateMesh(square2DVertices, 0.1f);
 
-    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices));
+    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
 
     // Print mass of the initial square
     cout << "Mass of the initial square: " << getMass(square2DVertices) << endl;
@@ -312,6 +402,7 @@ int main() {
     bool voronoiGenerated = false;
     vector<DestructibleObject> destructibleObjects; // To store the destructible objects
     float boundingBoxSize = 10.0f; // Bounding box size
+    bool collisionDetected = false; // Track collision
 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
         // Compute the MVP matrix from keyboard and mouse input
@@ -327,8 +418,23 @@ int main() {
 
         // Check for left mouse click to launch a new bullet
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            glm::vec3 bulletVelocity = cameraDirection * 5.0f; // Adjust the speed as necessary
+            glm::vec3 bulletVelocity = cameraDirection * 10.0f; // Adjust the speed as necessary
             bullets.push_back(DestructibleObject(sphereMesh, bulletPosition, bulletVelocity, 0.05f, false));
+            for (auto& destructibleObject : destructibleObjects) {
+                destructibleObject.affectedByGravity = true;
+            }
+            originalSquare.affectedByGravity = true;
+        }
+
+        // Check for 'R' key press to create a new complete square and reset camera position and angle
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            destructibleObjects.clear();
+            voronoiGenerated = false;
+            originalSquare = DestructibleObject(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
+            collisionDetected = false; // Reset collision
+            // Reset camera position and angle
+            setCameraPosition(glm::vec3(0, 0, 5));
+            setCameraDirection(3.14f, 0.0f);
         }
 
         // Update and draw bullets
@@ -346,106 +452,16 @@ int main() {
         // Draw the aiming dot at the center of the screen
         drawAimingDot(dotShader);
 
-        // Check for left mouse click to generate Voronoi diagram
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !voronoiGenerated) {
-            voronoiGenerated = true;
-
-            // Define point vertices
-            vector<Vertex> pointVertices;
-            VoronoiPoint impactP = { 0, 0 };
-            vector<VoronoiPoint*> points = generateRandomPoints(5, impactP.x - 0.1, impactP.x + 0.1, impactP.y - 0.1, impactP.y + 0.1);
-            for (const auto& point : points) {
-                pointVertices.push_back(Vertex(glm::vec3(point->x, point->y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-            }
-
-            Mesh pointMesh(pointVertices, {}, true);
-
-            // Define the bounding box (square)
-            jcv_rect bounding_box;
-            bounding_box.min.x = -halfSquareSize;
-            bounding_box.min.y = -halfSquareSize;
-            bounding_box.max.x = halfSquareSize;
-            bounding_box.max.y = halfSquareSize;
-
-            // Convert points to jcv_point
-            std::vector<jcv_point> jcv_points(points.size());
-            for (size_t i = 0; i < points.size(); ++i) {
-                jcv_points[i].x = points[i]->x;
-                jcv_points[i].y = points[i]->y;
-            }
-
-            // Generate Voronoi diagram
-            jcv_diagram diagram;
-            memset(&diagram, 0, sizeof(jcv_diagram));
-            jcv_diagram_generate(static_cast<int>(jcv_points.size()), &jcv_points[0], &bounding_box, nullptr, &diagram);
-
-            // Print Voronoi regions
-            printVoronoiRegions(diagram);
-
-            // Generate Voronoi edges
-            vector<Vertex> edgeVertices;
-            const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
-            while (edge) {
-                edgeVertices.push_back(Vertex(glm::vec3(edge->pos[0].x, edge->pos[0].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-                edgeVertices.push_back(Vertex(glm::vec3(edge->pos[1].x, edge->pos[1].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
-                edge = edge->next;
-            }
-
-            Mesh edgeMesh(edgeVertices, {});
-
-            destructibleObjects.clear(); // Clear old objects
-
-            const jcv_site* sites = jcv_diagram_get_sites(&diagram);
-            for (int i = 0; i < diagram.numsites; ++i) {
-                const jcv_site* site = &sites[i];
-                vector<glm::vec2> regionVertices;
-                const jcv_graphedge* edge = site->edges;
-                while (edge) {
-                    regionVertices.push_back(glm::vec2(edge->pos[0].x, edge->pos[0].y));
-                    regionVertices.push_back(glm::vec2(edge->pos[1].x, edge->pos[1].y));
-                    edge = edge->next;
+        // Check for collision between bullets and the original square
+        if (!collisionDetected) {
+            for (auto& bullet : bullets) {
+                if (originalSquare.CheckCollision(bullet)) {
+                    std::cout << "Collision detected" << std::endl;
+                    collisionDetected = true; // Stop checking further collisions
+                    voronoiGenerated = true;
+                    createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh);
+                    break;
                 }
-
-                // test splitted new objects movement
-                // make each piece a little bit away from each other
-                // Determine movement based on region's vertices
-                bool moveLeft = true, moveRight = true, moveUp = true, moveDown = true;
-                for (const auto& vertex : regionVertices) {
-                    if (vertex.x >= 0) moveLeft = false;
-                    if (vertex.x <= 0) moveRight = false;
-                    if (vertex.y <= 0) moveUp = false;
-                    if (vertex.y >= 0) moveDown = false;
-                }
-
-                float moveX = 0.0f, moveY = 0.0f;
-                if (moveLeft) moveX = -0.01f;
-                if (moveRight) moveX = 0.01f;
-                if (moveUp) moveY = 0.01f;
-                if (moveDown) moveY = -0.01f;
-
-                for (auto& vertex : regionVertices) {
-                    vertex.x += moveX;
-                    vertex.y += moveY;
-                }
-
-                Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
-                glm::vec3 position(0.0f, 0.0f, 0.0f);
-
-                // Calculate initial velocity for each piece
-                glm::vec3 velocity = glm::vec3(moveX, moveY, 0.0f);
-
-                float fragmentMass = getMass(regionVertices);
-                destructibleObjects.push_back(DestructibleObject(regionMesh, position, velocity, fragmentMass));
-
-                // Print mass of each fragment
-                cout << "Mass of fragment " << i << ": " << fragmentMass << endl;
-            }
-
-            // Free memory used by the diagram
-            jcv_diagram_free(&diagram);
-
-            for (auto point : points) {
-                delete point;
             }
         }
 

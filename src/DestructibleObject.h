@@ -19,7 +19,7 @@ public:
 
     void Update(float deltaTime) {
         if (affectedByGravity) {
-            velocity.y -= 0.01f * deltaTime;
+            velocity.y -= 0.1f * deltaTime;
         }
         position += velocity * deltaTime;
     }
@@ -31,6 +31,13 @@ public:
         glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
         glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
         mesh.Draw(shader);
+    }
+
+    bool CheckCollision(const DestructibleObject& other) const {
+        float distance = glm::length(position - other.position);
+        float combinedRadius = 0.05f + 0.5f;
+        std::cout << "checking" << std::endl;
+        return distance < combinedRadius;
     }
 };
 

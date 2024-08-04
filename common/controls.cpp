@@ -110,3 +110,12 @@ glm::vec3 getCameraDirection() {
 		cos(verticalAngle) * cos(horizontalAngle)
 	));
 }
+
+void setCameraPosition(const glm::vec3& newPosition) {
+	position = newPosition;
+}
+
+void setCameraDirection(float newHorizontalAngle, float newVerticalAngle) {
+	horizontalAngle = newHorizontalAngle;
+	verticalAngle = newVerticalAngle;
+}

@@ -74,6 +74,30 @@ assume bullet won't break
 
 assume bullet initial position is cameraposition.z + 1.0f so won't see big bullet in the front
 
+detect collision between bullet and other destructible objects from square , and change impact point to the point they touch each other
+
+why after collision detected, it's keep printing collision detected and creating new voronoi diagram? it should only create once bullet touches square, and make them fall?
+why the new objects are not falling with gravity? can you fix them?
+
+
+also remove this, otherwise it cant hit and gernate new objects
+                    // Remove the bullet after collision
+                    //bullet.velocity = glm::vec3(0.0f);
+                    //bullet.affectedByGravity = false;
+and can you update r key press to reset the square and change camera back to initial position and angle?
+
+Ensure collision detection only occurs once by adding a flag to the bullet indicating it has already collided.
+Apply gravity to new fragments correctly.
+Reset camera position and angle on 'R' key press.
+
+assume a square is only hit once
+
+assume sqaure can only be hit from the front surface
+
+not move with momentum, move in the direction from bullet position to each sites position, plus gravity
+
+
+
 ## Objectives
 
 1. Detect collisions between the bullet and the 2D sheet, and find the impact location.
