@@ -3,7 +3,8 @@
 in vec3 fragmentColor;
 in vec2 UV;
 out vec3 color;
+uniform vec3 objectColor;
 
 void main(){
-    color = vec3(1.0, 1.0, 1.0); // White color
+    color = objectColor;
 }

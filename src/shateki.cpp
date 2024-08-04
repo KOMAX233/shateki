@@ -21,6 +21,7 @@
 using namespace std;
 
 GLFWwindow* window;
+float fps = 120.0f;
 
 struct VoronoiPoint {
     float x, y;
@@ -38,6 +39,7 @@ vector<VoronoiPoint*> generateRandomPoints(int numPoints, float minX, float maxX
     return points;
 }
 
+
 void printVertices(const vector<Vertex>& vertices) {
     for (const auto& vertex : vertices) {
         cout << "Vertex Position: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")" << endl;
@@ -48,11 +50,11 @@ void printVoronoiRegions(const jcv_diagram& diagram) {
     const jcv_site* sites = jcv_diagram_get_sites(&diagram);
     for (int i = 0; i < diagram.numsites; ++i) {
         const jcv_site* site = &sites[i];
-        cout << "Region " << i << " with site (" << site->p.x << ", " << site->p.y << "):" << endl;
+        // cout << "Region " << i << " with site (" << site->p.x << ", " << site->p.y << "):" << endl;
         const jcv_graphedge* edge = site->edges;
         while (edge) {
-            cout << "  Edge from (" << edge->pos[0].x << ", " << edge->pos[0].y << ") to ("
-                << edge->pos[1].x << ", " << edge->pos[1].y << ")" << endl;
+            // cout << "  Edge from (" << edge->pos[0].x << ", " << edge->pos[0].y << ") to ("
+            //     << edge->pos[1].x << ", " << edge->pos[1].y << ")" << endl;
             edge = edge->next;
         }
     }
@@ -228,7 +230,7 @@ void drawAimingDot(GLuint shader) {
 }
 
 void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh, const glm::vec3& bulletVelocity, float bulletMass) {
-    vector<VoronoiPoint*> points = generateRandomPoints(10, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
+    vector<VoronoiPoint*> points = generateRandomPoints(50, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
 
     // Define the bounding box (square)
     jcv_rect bounding_box;
@@ -306,7 +308,7 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
         destructibleObjects.push_back(DestructibleObject(regionMesh, position, velocity, fragmentMass, true)); // Set affectedByGravity to true
 
         // Print mass of each fragment
-        cout << "Mass of fragment " << i << ": " << fragmentMass << endl;
+        // cout << "Mass of fragment " << i << ": " << fragmentMass << endl;
     }
 
     // Free memory used by the diagram
@@ -318,6 +320,8 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
 }
 
 int main() {
+    srand(static_cast<unsigned>(time(0))); // Seed the random number generator
+
     if (!glfwInit()) {
         cerr << "Failed to initialize GLFW\n";
         return -1;
@@ -386,9 +390,6 @@ int main() {
 
     DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
 
-    // Print mass of the initial square
-    cout << "Mass of the initial square: " << getMass(square2DVertices) << endl;
-
     // Generate sphere mesh for bullet
     Mesh sphereMesh = GenerateSphereMesh(0.05f, 36, 18);
     vector<DestructibleObject> bullets; // Store multiple bullets
@@ -396,13 +397,13 @@ int main() {
     GLuint squareShader = LoadShaders("RectangleVertexShader.vertexshader", "RectangleFragmentShader.fragmentshader");
     GLuint pointShader = LoadShaders("PointVertexShader.vertexshader", "PointFragmentShader.fragmentshader");
     GLuint edgeShader = LoadShaders("EdgeVertexShader.vertexshader", "EdgeFragmentShader.fragmentshader");
-    GLuint sphereShader = LoadShaders("RectangleVertexShader.vertexshader", "RectangleFragmentShader.fragmentshader");
-    GLuint dotShader = LoadShaders("SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader");
+    GLuint sphereShader = LoadShaders("EdgeVertexShader.vertexshader", "EdgeFragmentShader.fragmentshader");
+    GLuint dotShader = LoadShaders("2dVertexShader.vertexshader", "2dFragmentShader.fragmentshader");
 
     bool voronoiGenerated = false;
     vector<DestructibleObject> destructibleObjects; // To store the destructible objects
     float boundingBoxSize = 10.0f; // Bounding box size
-        bool collisionDetected = false; // Track collision
+    bool collisionDetected = false; // Track collision
 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
         // Compute the MVP matrix from keyboard and mouse input
@@ -439,7 +440,7 @@ int main() {
 
         // Update and draw bullets
         for (auto it = bullets.begin(); it != bullets.end();) {
-            it->Update(1.0f / 60.0f); // Update with a time step (e.g., 1/60th of a second)
+            it->Update(1.0f / fps);
             if (isOutsideBoundingBox(it->position, boundingBoxSize)) {
                 it = bullets.erase(it); // Remove bullet if outside bounding box
             }
@@ -456,7 +457,6 @@ int main() {
         if (!collisionDetected) {
             for (auto& bullet : bullets) {
                 if (originalSquare.CheckCollision(bullet)) {
-                    std::cout << "Collision detected" << std::endl;
                     collisionDetected = true; // Stop checking further collisions
                     voronoiGenerated = true;
                     createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh, bullet.velocity, bullet.mass);
@@ -466,26 +466,26 @@ int main() {
         }
 
         // Update positions of destructible objects
-        float deltaTime = 1.0f / 120.0f; // 120 FPS
+        float deltaTime = 1.0f / fps;
         for (auto it = destructibleObjects.begin(); it != destructibleObjects.end();) {
             it->Update(deltaTime);
             if (isOutsideBoundingBox(it->position, boundingBoxSize)) {
                 it = destructibleObjects.erase(it); // Remove fragment if outside bounding box
             }
             else {
-                it->Draw(edgeShader, ViewMatrix, ProjectionMatrix);
+                it->Draw(squareShader, ViewMatrix, ProjectionMatrix);
                 ++it;
             }
         }
 
         // Draw the original square or the destructible objects
         if (!voronoiGenerated) {
-            originalSquare.Draw(edgeShader, ViewMatrix, ProjectionMatrix);
+            originalSquare.Draw(squareShader, ViewMatrix, ProjectionMatrix);
         }
         else {
             // Draw the destructible objects
             for (auto& destructibleObject : destructibleObjects) {
-                destructibleObject.Draw(edgeShader, ViewMatrix, ProjectionMatrix);
+                destructibleObject.Draw(squareShader, ViewMatrix, ProjectionMatrix);
             }
         }
 

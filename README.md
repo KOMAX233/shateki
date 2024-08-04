@@ -9,7 +9,7 @@
 (-1,1) (1,1)
 (-1,-1) (1,-1)
 task3
-- assume number of sites to randomly generate is 5
+- assume number of sites to randomly generate is 50
 - move random points in the -0.1, 0.1 range to the impact point in x and y
 - assume point size is 3.0
 task 5
@@ -96,7 +96,7 @@ assume sqaure can only be hit from the front surface
 
 not move with momentum, move in the direction from bullet position to each sites position, plus gravity
 
-
+assign random color at object construction to see the fragments more clearly
 
 ## Objectives
 

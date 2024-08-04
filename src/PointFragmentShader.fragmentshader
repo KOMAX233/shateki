@@ -5,5 +5,5 @@ in vec2 UV;
 out vec3 color;
 
 void main(){
-    color = vec3(1.0, 0.0, 0.0); // Red color
+    color = vec3(1.0, 1.0, 0.0); // yellow
 }

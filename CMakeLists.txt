@@ -69,6 +69,8 @@ add_executable(shateki
     src/RectangleFragmentShader.fragmentshader
     src/EdgeVertexShader.vertexshader
     src/EdgeFragmentShader.fragmentshader
+    src/2dVertexShader.vertexshader
+    src/2dFragmentShader.fragmentshader
 )
 target_link_libraries(shateki
     ${ALL_LIBS}
