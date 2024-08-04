@@ -119,3 +119,97 @@ assign random color at object construction to see the fragments more clearly
 
 8. Make new objects move following velocity and update every loop (completed).
 
+
+
+The Voronoi diagram generation in the provided code is based on Fortune's algorithm, which is an efficient, sweep-line algorithm for generating Voronoi diagrams. Fortune's algorithm has a time complexity of \(O(n \log n)\), making it suitable for handling a large number of points. Below, I'll explain the key concepts and steps involved in Fortune's algorithm as implemented in the provided code.
+
+### Key Concepts
+
+1. **Voronoi Diagram**: A partitioning of a plane into regions based on distance to a specific set of points. Each region corresponds to one point and consists of all locations closer to that point than to any other.
+
+2. **Sweep Line**: An imaginary line that sweeps across the plane from top to bottom. As the line moves, it processes events (either site events or circle events).
+
+3. **Beach Line**: A complex structure maintained by the algorithm that represents the boundary of the regions being formed by the sweep line. It consists of parabolic arcs, where each arc corresponds to a site that has been processed but whose Voronoi region has not been fully completed.
+
+4. **Priority Queue**: Used to manage the events. Site events are associated with the sites to be processed, and circle events are associated with the points where three parabolic arcs meet.
+
+### Steps of the Algorithm
+
+1. **Initialization**: 
+   - Sites (points) are sorted and stored in a priority queue.
+   - The beach line is initialized with two dummy nodes representing the start and end.
+
+2. **Processing Events**:
+   - The main loop processes events from the priority queue until it is empty.
+   - **Site Event**: Occurs when the sweep line encounters a new site (point).
+     - A new arc is added to the beach line.
+     - New edges are created between the new site and neighboring arcs.
+     - Potential circle events are calculated and added to the priority queue.
+   - **Circle Event**: Occurs when three arcs meet, indicating a vertex of the Voronoi diagram.
+     - The middle arc is removed from the beach line.
+     - The circle event creates a new vertex for the Voronoi diagram and finalizes edges.
+     - Potential new circle events are calculated and added to the priority queue.
+
+3. **Finalization**: 
+   - After all events are processed, the remaining arcs in the beach line are used to finalize the remaining edges of the Voronoi diagram.
+   - Special handling is done to ensure all edges are within the bounding box.
+
+4. **Clipping and Filling Gaps**:
+   - The edges of the Voronoi diagram are clipped to the bounding box.
+   - Any gaps at the borders are filled to ensure the diagram is complete and correctly bounded.
+
+### Core Functions
+
+- **`jcv_site_event`**: Handles the addition of a new site event.
+- **`jcv_circle_event`**: Handles the removal of an arc and creation of a circle event.
+- **`jcv_halfedge_new`**: Manages the creation and linking of new half-edges in the beach line.
+- **`jcv_pq_*` Functions**: Manage the priority queue operations.
+- **`jcv_edge_clipline`**: Clips the edges to the bounding box.
+- **`jcv_finishline`**: Finalizes edges by intersecting them with the bounding box.
+
+### Summary
+
+Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line across the plane and maintaining the beach line and a priority queue of events. The provided code implements this algorithm with additional functionality for clipping and managing memory, ensuring the generated diagram is correctly bounded and efficiently handled.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. A brief description about your program. What does it do?
+2. The usual README content telling us how to run your program.
+3. An extra implementation section that describes some software considerations, where appropriate, about
+
+- Algorithms, data structures, and complexities,
+- Platform and system dependence or independence, global constants and configurability,
+- Input/output syntax, pre- and post-processing,
+- Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
+- Caveats, bugs, cautions, assumptions.
+4. objectives.
+## Objectives
+
+1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
+
+2. Construct Voronoi diagram generation function with a given number of seeds (completed).
+
+3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
+
+4. Create new objects for each cell in the Voronoi diagram (completed).
+
+5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
+
+6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
+
+7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
+
+8. Make new objects move following velocity and update every loop (completed).
