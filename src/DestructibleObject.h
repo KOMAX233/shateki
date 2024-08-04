@@ -11,12 +11,16 @@ public:
     Mesh mesh;
     glm::vec3 position;
     glm::vec3 velocity;
+    float mass;
+    bool affectedByGravity;
 
-    DestructibleObject(const Mesh& mesh, const glm::vec3& position, const glm::vec3& velocity)
-        : mesh(mesh), position(position), velocity(velocity) {}
+    DestructibleObject(const Mesh& mesh, const glm::vec3& position, const glm::vec3& velocity, float mass, bool affectedByGravity = true)
+        : mesh(mesh), position(position), velocity(velocity), mass(mass), affectedByGravity(affectedByGravity) {}
 
     void Update(float deltaTime) {
-        velocity.y -= 0.01f * deltaTime; // Apply gravity
+        if (affectedByGravity) {
+            velocity.y -= 0.01f * deltaTime;
+        }
         position += velocity * deltaTime;
     }
 

@@ -50,8 +50,29 @@ assume gravity is 0.1
 increase fps, decrease delta time to slow the movement
 assume 120 fps
 
+task 8
+When a bullet impacts a sheet, the velocity of each fragment is influenced by:
 
+The initial kinetic energy of the bullet. how fast
+The proximity of the fragment to the impact point. how close
+The direction and angle of the bullet's impact. angle
+The mass and size of the fragments.
 
+conservation of momentum 
+motion of system of particles
+
+? assign mass to each des object: assume mass is area of region because flat sheet
+
+task 1
+able to shoot a new bullet everytime left mouse is clicked? and add a bounding box to remove the old bullet and square fragment , if they exceed the box, set it to be the box to be size 10
+
+assume aiming dot size 0.01f
+
+assume bullet is not affected by gravity, add flag to check an object has gravity
+
+assume bullet won't break
+
+assume bullet initial position is cameraposition.z + 1.0f so won't see big bullet in the front
 
 ## Objectives
 
@@ -69,5 +90,5 @@ assume 120 fps
 
 7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
 
-8. Make new objects move following velocity and update every loop.
+8. Make new objects move following velocity and update every loop (completed).
 
