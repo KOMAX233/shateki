@@ -46,11 +46,11 @@ jc voronoi for now
 
 4. Create new objects for each cell in the Voronoi diagram (completed).
 
-5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list.
+5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
 
-6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list.
+6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
 
-7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list.
+7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
 
 8. Make new objects move following velocity and update every loop.
 
