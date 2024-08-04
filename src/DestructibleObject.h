@@ -36,7 +36,6 @@ public:
     bool CheckCollision(const DestructibleObject& other) const {
         float distance = glm::length(position - other.position);
         float combinedRadius = 0.05f + 0.5f;
-        std::cout << "checking" << std::endl;
         return distance < combinedRadius;
     }
 };

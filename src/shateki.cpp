@@ -227,8 +227,8 @@ void drawAimingDot(GLuint shader) {
     dotMesh.Draw(shader);
 }
 
-void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh) {
-    vector<VoronoiPoint*> points = generateRandomPoints(5, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
+void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh, const glm::vec3& bulletVelocity, float bulletMass) {
+    vector<VoronoiPoint*> points = generateRandomPoints(10, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
 
     // Define the bounding box (square)
     jcv_rect bounding_box;
@@ -299,10 +299,10 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
         Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
         glm::vec3 position(0.0f, 0.0f, 0.0f);
 
-        // Calculate initial velocity for each piece
-        glm::vec3 velocity = glm::vec3(moveX, moveY, 0.0f);
-
+        // Calculate initial velocity for each piece using conservation of momentum
         float fragmentMass = getMass(regionVertices);
+        glm::vec3 velocity = bulletVelocity * (bulletMass / fragmentMass) * 0.1f; // Scaling down the velocity for more realistic effect
+
         destructibleObjects.push_back(DestructibleObject(regionMesh, position, velocity, fragmentMass, true)); // Set affectedByGravity to true
 
         // Print mass of each fragment
@@ -402,7 +402,7 @@ int main() {
     bool voronoiGenerated = false;
     vector<DestructibleObject> destructibleObjects; // To store the destructible objects
     float boundingBoxSize = 10.0f; // Bounding box size
-    bool collisionDetected = false; // Track collision
+        bool collisionDetected = false; // Track collision
 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
         // Compute the MVP matrix from keyboard and mouse input
@@ -459,7 +459,7 @@ int main() {
                     std::cout << "Collision detected" << std::endl;
                     collisionDetected = true; // Stop checking further collisions
                     voronoiGenerated = true;
-                    createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh);
+                    createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh, bullet.velocity, bullet.mass);
                     break;
                 }
             }
@@ -480,7 +480,7 @@ int main() {
 
         // Draw the original square or the destructible objects
         if (!voronoiGenerated) {
-            originalSquare.Draw(squareShader, ViewMatrix, ProjectionMatrix);
+            originalSquare.Draw(edgeShader, ViewMatrix, ProjectionMatrix);
         }
         else {
             // Draw the destructible objects
