@@ -12,6 +12,11 @@ After the voronoi diagram is generated, it generates front and back polygon, and
 There is a 20 * 20 bounding box around the scene. If the bullet or fragments get outside the bounding box, they will disappear and be cleaned. pressing R key can reset the square back complete in the center of the space and reset the camera position and direction back to the initial value.
 
 ## Compilation and running
+### Build
+1. Open Cmake GUI and select the project-dir as the source code, and project-dir/build as the build directory.
+2. Configure and generate.
+3. Build files will be generated in project-dir/build.
+### Run
 1. To run the program, open the solution build/shateki.sln in Visual Studio.
 2. Right click on shateki in solution explorer, click Set as Startup Project.
 3. Click Local Windows Debugger to start the program. 
@@ -151,3 +156,30 @@ The Voronoi diagram generation in the provided code is based on Fortune's algori
 ### Summary
 
 Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line across the plane and maintaining the beach line and a priority queue of events. The provided code implements this algorithm with additional functionality for clipping and managing memory, ensuring the generated diagram is correctly bounded and efficiently handled. -->
+
+
+
+i'll start with obective 2 and put 1 as last, because its the last one being implemented
+2 Construct Voronoi diagram generation function with a given number of seeds (completed).
+data structures like sites, diagram are defined in order to store the generated diagram and data structures like priority queue and sweepline are used for fortune's sweepline algorithm. the diagram generation is based on fortune's sweepline algorithm.
+when you press key 2, and try shooting the object, the sites of the diagram can be anywhere on the 0.5 by 0.5 2d plane.
+when you press f you can see the voronoi diagram with sites and edges drawn on the orgiinal location even the new objects move with velocity implemented later.
+we can press r to reset camera position and direction, remove old objects and bullets and create new ones.
+3 Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
+we bound the randomly generated points within a 0.1 by 0.1 bounding box so the diagram simulates object fracture more realisticlly
+4 Create new objects for each cell in the Voronoi diagram (completed).
+when i tried to test the square has been split into new regions, i moved the regions with all vetices <0  to the left and >0 to the right in x direction and same for y. we can see they are already splitted.
+5 Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
+on the side of the square sheet, we can see where the 2d plane was by pressing f. it's in the middle of the two surfaces, with the depth value we assign.
+6 Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
+on the side, gap polygons are formed using two vertices on the square and assign them a positive and negative depth as z.
+7 Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
+since each region has its vertices and are polygons, we connect every 3 vertices to form a triangle and therefore fill the whole polygon, which forms the front, back , gap surface.
+8 Make new objects move following velocity and update every loop (completed).
+mass and velocity are added to destructible objects
+we can use wasd to move around, and see the new objects moving.
+1 Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
+we add bullet as a sphere mesh last, and checked is the distance closer than the sum of radius for collision, and find an imapct point.
+impact point was set to 0,0 and fracture is triggered when left click mouse, and now we can use the actual bullet collision to trigger fracture.
+an extra feature is added. we assign random colors at object construction, so when they are fractured, we can see each fragments more clearly.
+that's all for my demo.
