@@ -54,7 +54,8 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 13:       newObj.mesh.polygon ← site.vertices
 14:       objectlist ← newObj
 15:
-16:    Mark obj for removal```
+16:    Mark obj for removal
+```
 - The pseudocode is used in main() in shateki.cpp to generate voronoi diagram pattern, make each site a new Destructible object, and generate mesh for them.
 
 #### Mesh
@@ -101,7 +102,8 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 34:   // each polygon is used since they are all convex.
 35:
 36:   mesh ← VertexList Initialize a new mesh
-37:   return mesh```
+37:   return mesh
+```
 - The pseudocode is used to define Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) by adding z value for each vertex, and connect every four vertices to form a face.
 
 ### Platform and system dependence, external libraries
