@@ -3,7 +3,7 @@
 ## Description
 The program shateki simulates flat sheet fracture with Voronoi diagram and mesh generation.
 
-It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the front or back surface of the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
+It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
 
 After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions.
 
@@ -15,17 +15,81 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 1. To run the program, open the solution build/shateki.sln in Visual Studio.
 2. Right click on shateki in solution explorer, click Set as Startup Project.
 3. Click Local Windows Debugger to start the program. 
-4. You can also use the src/shateki.exe to run the program.
+4. You can also use the src/shateki.exe to run the program in src/ directory.
 
 ## Implementation
-3. An extra implementation section that describes some software considerations, where appropriate, about
+### Algorithms, data structures, and complexities
+- Voronoi Diagram
+...............
+- Fortune's Sweepline algorithm
+..............., nlog(n), faster than flip edge algorithm using delaunay triangle
+- Destructible Object
+...............
+- Mesh
+...............
+- Object destruction algorithm
+...............
+- Mesh Creation algorithm
+...............
 
-- Algorithms, data structures, and complexities,
-- Platform and system dependence or independence, global constants and configurability,
-- Input/output syntax, pre- and post-processing,
-- Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
-- Caveats, bugs, cautions, assumptions.
+### Platform and system dependence, external libraries
+- The program is written and tested on Microsoft Windows 11 Home, Version 10.0.22631 Build 22631, with NVIDIA GeForce RTX 4060 Laptop GPU, in Microsoft Visual Studio Community 2022 (64-bit) Version 17.9.6. 
+- External libraries that are used are glew-1.13.0, glfw-3.1.2, glm-0.9.7.1, rpavlik-cmake-modules-fe2273.
 
+### Input/output, control
+- Debug outputs are all commented out for performance.
+- R key for resetting to complete square sheet, initial camera position and horizontal and vertical angles. If new objects are already created, they will be removed.
+- W/S key for moving forth and back, so you get closer or farther to the sheet.
+- A/D key for moving left and right.
+- Left click mouse for shooting bullet. Multiple bullets can be fired when holding left click.
+
+### Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
+The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org.
+
+### Caveats, assumptions
+#### Task 1
+- Assume the velocity of bullet is 10.0 magnitude to camera direction.
+- Assume conservation of momentum is used to determine the velocity of fragments after collision.
+- Fragments velocity is scaled down by 0.1 to avoid too fast speed because bullet velocity is fast and fragments are light.
+- A new bullet is able to be fired every time left mouse is clicked. 
+- A 20 * 20 bounding box is used to remove old bullets and square fragments. If they exceed the box, remove it from the bullet or destructible objects vector.
+- Assume bullet is not affected by gravity, and a flag is added for destructible object to decide if it has gravity.
+- Assume Destructible objects that have graivty only move to the direction of gravity after it's destructed and voronoi diagram is generated.
+- Assume bullet won't break, and won't collide with or break each other. New fragment objects won't collide and break each other.
+- Assume bullet initial position is cameraposition moving back 1.0.
+- Assume an Destructible object can only be fractured once, so shooting on fragments won't break them.
+- Assume random color are assigned at Destructible object construction to see the fragments more clearly.
+#### Task 2
+- Before bullet and collision are implemented, impact point is assumed to be (0, 0), the center of the 2D plane.
+- Voronoi diagram is implemented with Fortune's Sweepline algorithm.
+- Assume camera's initial position is (0, 0, 3), horizontal angle is 3.14, and verticle angle is 0.0.
+#### Task 3
+- Assume the number of random points to generate and used as voronoi diagram's sites is 50.
+- Assume random points are generated with x and y coordinates in the range of [-0.1, 0.1] to the impact point.
+<!-- - Assume point size is 3.0. -->
+#### Task 4
+<!-- - after getting the intersections, check other vertices on the same edge, if it has other vertices on the same edge that's not corner 0.5/-0.5, connect to the one next to them, if they don't have neighbor on the same edge connect them to the corner, if theres only one vertex intersected on a square edge, genreate one to the left and one to the right. 
+
+create a new edge list
+add the new edges to the edge list with the edges from the output of compute voronoi edges
+
+create a new point list, add the vertices of all edges
+
+now all edges should be able to used for construct a region, start from one vertex, check the edges to get the next point connect to it, stop when find edge that connect back to the first point, now the edges and vertices that can a circle is used as one destructible object.
+
+repeat until sites number of new objects have been found, then pass the objects to generate mesh
+
+jc voronoi for now -->
+#### Task 5
+- Assume the z value of square sheet is in the range of [-0.1, 0.1].
+#### Task 6
+- add boundry edges gap polygon and vertices if x or y is equal to size of square 0.5
+#### Task 7
+
+#### Task 8
+- Assume gravity is 0.1 to negative y.
+- Assume fps is 120.
+- Assume the mass of each objects created from voronoi diagram is the area of region because they are all flat sheet with same depth.
 
 ## Objectives
 
@@ -45,146 +109,14 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 
 8. Make new objects move following velocity and update every loop (completed).
 
+## References
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+<!-- 
 ## Specification
-- opengl is used
-- voronoi diagram using sweep line is used
-- object2 assume impact point is center of the front surface of the sheet
-- seeing 36 vertices because each face is split into triangle which is 3 vertices, 6 faces, 12 triangles, 36 vertices.
-- from camera direction, z is positive, front is z=0, back is z=-0.2
-(-1,1) (1,1)
-(-1,-1) (1,-1)
-
-assume camera initial position 0,0,3, horizontal angle 3.14f, verticle 0.0f
-
-task3
-- assume number of sites to randomly generate is 50
-- move random points in the -0.1, 0.1 range to the impact point in x and y
-- assume point size is 3.0
-task 5
-- assume the depth of square is 0.1(given value)
-task 6
-- add boundry edges gap polygon and vertices if x or y is equal to size of square 0.5
-task 4
-- after getting the intersections, check other vertices on the same edge, if it has other vertices on the same edge that's not corner 0.5/-0.5, connect to the one next to them, if they don't have neighbor on the same edge connect them to the corner, if theres only one vertex intersected on a square edge, genreate one to the left and one to the right. 
-
-create a new edge list
-add the new edges to the edge list with the edges from the output of compute voronoi edges
-
-create a new point list, add the vertices of all edges
-
-now all edges should be able to used for construct a region, start from one vertex, check the edges to get the next point connect to it, stop when find edge that connect back to the first point, now the edges and vertices that can a circle is used as one destructible object.
-
-repeat until sites number of new objects have been found, then pass the objects to generate mesh
-
-voronoi: vd dt duality
-fortune's algorithm vs delaunay traingle (maybe? v->f, e->e, f->v)
-Bowyer-Watson algorithm to generate dt
-https://www.mtmckenna.com/posts/2023/06/16/voronoi-diagrams
-https://cartography-playground.gitlab.io/playgrounds/triangulation-delaunay-voronoi-diagram/
-
-jc voronoi for now
-
-
-task 1:
-When a sheet is hit by a bullet, the pieces of the sheet will typically have velocities influenced by the impact of the bullet. The velocity of each piece can be computed based on several factors:
-
-Initial Velocity of the Bullet: The initial velocity of the bullet imparts kinetic energy to the sheet, which is then distributed among the fragments.
-Point of Impact: The location where the bullet hits the sheet will affect how the energy is distributed. Pieces closer to the impact point will generally have higher velocities.
-Direction of Impact: The direction from which the bullet strikes the sheet will influence the initial velocities of the fragments.
-Mass and Size of Fragments: Smaller and lighter fragments will generally have higher velocities compared to larger and heavier fragments.
-
-task 8
-assume gravity is 0.1
-increase fps, decrease delta time to slow the movement
-assume 120 fps
-
-task 8
-When a bullet impacts a sheet, the velocity of each fragment is influenced by:
-
-The initial kinetic energy of the bullet. how fast
-The proximity of the fragment to the impact point. how close
-The direction and angle of the bullet's impact. angle
-The mass and size of the fragments.
-
-conservation of momentum 
-motion of system of particles
-
-? assign mass to each des object: assume mass is area of region because flat sheet
-
-task 1
-able to shoot a new bullet everytime left mouse is clicked? and add a bounding box to remove the old bullet and square fragment , if they exceed the box, set it to be the box to be size 10
-
-assume aiming dot size 0.01f
-
-assume bullet is not affected by gravity, add flag to check an object has gravity
-
-assume bullet won't break
-
-assume bullet initial position is cameraposition.z + 1.0f so won't see big bullet in the front
-
-detect collision between bullet and other destructible objects from square , and change impact point to the point they touch each other
-
-why after collision detected, it's keep printing collision detected and creating new voronoi diagram? it should only create once bullet touches square, and make them fall?
-why the new objects are not falling with gravity? can you fix them?
-
-
-also remove this, otherwise it cant hit and gernate new objects
-                    // Remove the bullet after collision
-                    //bullet.velocity = glm::vec3(0.0f);
-                    //bullet.affectedByGravity = false;
-and can you update r key press to reset the square and change camera back to initial position and angle?
-
-Ensure collision detection only occurs once by adding a flag to the bullet indicating it has already collided.
-Apply gravity to new fragments correctly.
-Reset camera position and angle on 'R' key press.
-
-assume a square is only hit once
-
-assume sqaure can only be hit from the front surface
-
-not move with momentum, move in the direction from bullet position to each sites position, plus gravity
-
-assign random color at object construction to see the fragments more clearly
-
-scaled down fragments velocity to avoid too fast speed because bullet velocity is fast
 
 
 
@@ -236,19 +168,4 @@ The Voronoi diagram generation in the provided code is based on Fortune's algori
 
 ### Summary
 
-Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line across the plane and maintaining the beach line and a priority queue of events. The provided code implements this algorithm with additional functionality for clipping and managing memory, ensuring the generated diagram is correctly bounded and efficiently handled.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line across the plane and maintaining the beach line and a priority queue of events. The provided code implements this algorithm with additional functionality for clipping and managing memory, ensuring the generated diagram is correctly bounded and efficiently handled. -->
