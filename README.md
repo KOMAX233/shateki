@@ -5,7 +5,7 @@ The program shateki simulates flat sheet fracture with Voronoi diagram and mesh 
 
 It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
 
-After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions. Pressing F key shows the voronoi points, edges.
+After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions. Pressing 2 key and shoot the same time to see voronoi not centered in the bounding box. Pressing F key shows the voronoi points, edges. 
 
 After the voronoi diagram is generated, it generates front and back polygon, and gap vertically between the front and back polygon, so each voronoi diagram gets depth and turns from 2D to 3D. Pressing F key also shows the mesh generated for the 2D voronoid diagram. Each voronoi region is made to a Destructible Object and mesh is generated for each of them. Each Destructible Object is assigned a random color at construction, so that it will be easier to visualize the fracture. After the new objects are created and meshes are assigned to them, the new objects fall and move based on bullet mass, velocity, and the new object's mass. 
 
@@ -41,6 +41,7 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 - R key for resetting to complete square sheet, initial camera position and horizontal and vertical angles. If new objects are already created, they will be removed.
 - W/S key for moving forth and back, so you get closer or farther to the sheet.
 - A/D key for moving left and right.
+- 2 key while shooting the sheet to get voronoi diagram from random points not bounded by 0.2 * 0.2 box.
 - F key for showing voronoi sites, edges, and square with depth.
 - Left click mouse for shooting bullet. Multiple bullets can be fired when holding left click.
 

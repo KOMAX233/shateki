@@ -238,7 +238,12 @@ void drawAimingDot(GLuint shader) {
 // task 3
 void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh, const glm::vec3& bulletVelocity, float bulletMass, Mesh& pointMesh, Mesh& edgeMesh) {
     // generate 50 random points as sites
-    vector<VoronoiPoint*> points = generateRandomPoints(50, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
+    float pointRange = 0.1f;
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        // task 2
+        pointRange = 0.5f;
+    }
+    vector<VoronoiPoint*> points = generateRandomPoints(50, impactPoint.x - pointRange, impactPoint.x + pointRange, impactPoint.y - pointRange, impactPoint.y + pointRange);
     
     // add to point mesh
     vector<Vertex> pointVertices;
