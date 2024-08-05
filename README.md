@@ -1,6 +1,89 @@
 # Shateki: Japanese gun shooting game with Voronoi diagram and mesh generation in fracture simulation
 
-# Specification
+## Description
+The program shateki simulates flat sheet fracture with Voronoi diagram and mesh generation.
+
+It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the front or back surface of the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
+
+After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions.
+
+After the voronoi diagram is generated, it generates front and back polygon, and gap vertically between the front and back polygon, so each voronoi diagram gets depth and turns from 2D to 3D. Each voronoi region is made to a Destructible Object and mesh is generated for each of them. Each Destructible Object is assigned a random color at construction, so that it will be easier to visualize the fracture. After the new objects are created and meshes are assigned to them, the new objects fall and move based on bullet mass, velocity, and the new object's mass.
+
+There is a 20 * 20 bounding box around the scene. If the bullet or fragments get outside the bounding box, they will disappear and be cleaned. pressing R key can reset the square back complete in the center of the space and reset the camera position and direction back to the initial value.
+
+## Compilation and running
+1. To run the program, open the solution build/shateki.sln in Visual Studio.
+2. Right click on shateki in solution explorer, click Set as Startup Project.
+3. Click Local Windows Debugger to start the program. 
+4. You can also use the src/shateki.exe to run the program.
+
+## Implementation
+3. An extra implementation section that describes some software considerations, where appropriate, about
+
+- Algorithms, data structures, and complexities,
+- Platform and system dependence or independence, global constants and configurability,
+- Input/output syntax, pre- and post-processing,
+- Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
+- Caveats, bugs, cautions, assumptions.
+
+
+## Objectives
+
+1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
+
+2. Construct Voronoi diagram generation function with a given number of seeds (completed).
+
+3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
+
+4. Create new objects for each cell in the Voronoi diagram (completed).
+
+5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
+
+6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
+
+7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
+
+8. Make new objects move following velocity and update every loop (completed).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Specification
 - opengl is used
 - voronoi diagram using sweep line is used
 - object2 assume impact point is center of the front surface of the sheet
@@ -101,23 +184,7 @@ not move with momentum, move in the direction from bullet position to each sites
 
 assign random color at object construction to see the fragments more clearly
 
-## Objectives
-
-1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
-
-2. Construct Voronoi diagram generation function with a given number of seeds (completed).
-
-3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
-
-4. Create new objects for each cell in the Voronoi diagram (completed).
-
-5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
-
-6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
-
-7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
-
-8. Make new objects move following velocity and update every loop (completed).
+scaled down fragments velocity to avoid too fast speed because bullet velocity is fast
 
 
 
@@ -185,31 +252,3 @@ Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line 
 
 
 
-
-1. A brief description about your program. What does it do?
-2. The usual README content telling us how to run your program.
-3. An extra implementation section that describes some software considerations, where appropriate, about
-
-- Algorithms, data structures, and complexities,
-- Platform and system dependence or independence, global constants and configurability,
-- Input/output syntax, pre- and post-processing,
-- Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
-- Caveats, bugs, cautions, assumptions.
-4. objectives.
-## Objectives
-
-1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
-
-2. Construct Voronoi diagram generation function with a given number of seeds (completed).
-
-3. Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
-
-4. Create new objects for each cell in the Voronoi diagram (completed).
-
-5. Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
-
-6. Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
-
-7. Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
-
-8. Make new objects move following velocity and update every loop (completed).
