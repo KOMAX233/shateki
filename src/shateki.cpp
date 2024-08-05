@@ -92,7 +92,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
     }
 
     // task 7
-    // Front polygon indices (triangulation)
+    // front polygon
     if (pointList.size() > 2) {
         for (size_t i = 1; i < pointList.size() - 1; ++i) {
             indices.push_back(0);
@@ -101,7 +101,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
         }
     }
 
-    // Back polygon indices (triangulation)
+    // back polygon
     size_t offset = pointList.size();
     if (pointList.size() > 2) {
         for (size_t i = 1; i < pointList.size() - 1; ++i) {
@@ -119,7 +119,6 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
         size_t frontOffset = 0;
         size_t backOffset = pointList.size();
 
-        // Two triangles for each quad
         indices.push_back(frontOffset + i);
         indices.push_back(backOffset + i);
         indices.push_back(backOffset + j);
@@ -127,77 +126,6 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
         indices.push_back(frontOffset + i);
         indices.push_back(backOffset + j);
         indices.push_back(frontOffset + j);
-    }
-
-    return Mesh(vertices, indices);
-}
-
-// task 1
-Mesh GenerateSphereMesh(float radius, int sectorCount, int stackCount) {
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    float x, y, z, xy;                              // vertex position
-    float nx, ny, nz, lengthInv = 1.0f / radius;    // normal
-    float s, t;                                     // vertex texCoord
-
-    float sectorStep = 2 * M_PI / sectorCount;
-    float stackStep = M_PI / stackCount;
-    float sectorAngle, stackAngle;
-
-    for (int i = 0; i <= stackCount; ++i)
-    {
-        stackAngle = M_PI / 2 - i * stackStep;        // starting from pi/2 to -pi/2
-        xy = radius * cosf(stackAngle);             // r * cos(u)
-        z = radius * sinf(stackAngle);              // r * sin(u)
-
-        // add (sectorCount+1) vertices per stack
-        // the first and last vertices have same position and normal, but different tex coords
-        for (int j = 0; j <= sectorCount; ++j)
-        {
-            sectorAngle = j * sectorStep;           // starting from 0 to 2pi
-
-            // vertex position (x, y, z)
-            x = xy * cosf(sectorAngle);             // r * cos(u) * cos(v)
-            y = xy * sinf(sectorAngle);             // r * cos(u) * sin(v)
-            vertices.push_back(Vertex(glm::vec3(x, y, z), glm::vec3(x * lengthInv, y * lengthInv, z * lengthInv), glm::vec2((float)j / sectorCount, (float)i / stackCount)));
-
-            // normal
-            nx = x * lengthInv;
-            ny = y * lengthInv;
-            nz = z * lengthInv;
-
-            // texture coordinate
-            s = (float)j / sectorCount;
-            t = (float)i / stackCount;
-        }
-    }
-
-    // generate CCW index list of sphere triangles
-    int k1, k2;
-    for (int i = 0; i < stackCount; ++i)
-    {
-        k1 = i * (sectorCount + 1);     // beginning of current stack
-        k2 = k1 + sectorCount + 1;      // beginning of next stack
-
-        for (int j = 0; j < sectorCount; ++j, ++k1, ++k2)
-        {
-            // 2 triangles per sector excluding first and last stacks
-            // k1 => k2 => k1+1
-            if (i != 0)
-            {
-                indices.push_back(k1);
-                indices.push_back(k2);
-                indices.push_back(k1 + 1);
-            }
-
-            // k1+1 => k2 => k2+1
-            if (i != (stackCount - 1))
-            {
-                indices.push_back(k1 + 1);
-                indices.push_back(k2);
-                indices.push_back(k2 + 1);
-            }
-        }
     }
 
     return Mesh(vertices, indices);
@@ -245,36 +173,30 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
     }
     vector<VoronoiPoint*> points = generateRandomPoints(50, impactPoint.x - pointRange, impactPoint.x + pointRange, impactPoint.y - pointRange, impactPoint.y + pointRange);
     
-    // add to point mesh
     vector<Vertex> pointVertices;
     for (const auto& point : points) {
         pointVertices.push_back(Vertex(glm::vec3(point->x, point->y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
     }
     pointMesh = Mesh(pointVertices, {}, true);
 
-    // Define the bounding box (square)
     jcv_rect bounding_box;
     bounding_box.min.x = -halfSquareSize;
     bounding_box.min.y = -halfSquareSize;
     bounding_box.max.x = halfSquareSize;
     bounding_box.max.y = halfSquareSize;
 
-    // Convert points to jcv_point
     std::vector<jcv_point> jcv_points(points.size());
     for (size_t i = 0; i < points.size(); ++i) {
         jcv_points[i].x = points[i]->x;
         jcv_points[i].y = points[i]->y;
     }
 
-    // Generate Voronoi diagram
     jcv_diagram diagram;
     memset(&diagram, 0, sizeof(jcv_diagram));
     jcv_diagram_generate(static_cast<int>(jcv_points.size()), &jcv_points[0], &bounding_box, nullptr, &diagram);
 
-    // Print Voronoi regions
     printVoronoiRegions(diagram);
 
-    // Generate Voronoi edges
     vector<Vertex> edgeVertices;
     const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
     while (edge) {
@@ -285,8 +207,7 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
 
     edgeMesh = Mesh(edgeVertices, {});
 
-    destructibleObjects.clear(); // Clear old objects
-
+    destructibleObjects.clear();
     const jcv_site* sites = jcv_diagram_get_sites(&diagram);
     for (int i = 0; i < diagram.numsites; ++i) {
         const jcv_site* site = &sites[i];
@@ -301,29 +222,28 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
         // test splitted new objects movement
         // make each piece a little bit away from each other
         // Determine movement based on region's vertices
-        bool moveLeft = true, moveRight = true, moveUp = true, moveDown = true;
-        for (const auto& vertex : regionVertices) {
-            if (vertex.x >= 0) moveLeft = false;
-            if (vertex.x <= 0) moveRight = false;
-            if (vertex.y <= 0) moveUp = false;
-            if (vertex.y >= 0) moveDown = false;
-        }
+        // bool moveLeft = true, moveRight = true, moveUp = true, moveDown = true;
+        // for (const auto& vertex : regionVertices) {
+        //     if (vertex.x >= 0) moveLeft = false;
+        //     if (vertex.x <= 0) moveRight = false;
+        //     if (vertex.y <= 0) moveUp = false;
+        //     if (vertex.y >= 0) moveDown = false;
+        // }
 
-        float moveX = 0.0f, moveY = 0.0f;
-        if (moveLeft) moveX = -0.01f;
-        if (moveRight) moveX = 0.01f;
-        if (moveUp) moveY = 0.01f;
-        if (moveDown) moveY = -0.01f;
+        // float moveX = 0.0f, moveY = 0.0f;
+        // if (moveLeft) moveX = -0.01f;
+        // if (moveRight) moveX = 0.01f;
+        // if (moveUp) moveY = 0.01f;
+        // if (moveDown) moveY = -0.01f;
 
-        for (auto& vertex : regionVertices) {
-            vertex.x += moveX;
-            vertex.y += moveY;
-        }
+        // for (auto& vertex : regionVertices) {
+        //     vertex.x += moveX;
+        //     vertex.y += moveY;
+        // }
 
         Mesh regionMesh = GenerateMesh(regionVertices, 0.1f);
         glm::vec3 position(0.0f, 0.0f, 0.0f);
 
-        // Calculate initial velocity for each piece using conservation of momentum
         float fragmentMass = getMass(regionVertices);
         glm::vec3 velocity = bulletVelocity * (bulletMass / fragmentMass) * 0.1f; // Scaling down the velocity for more realistic effect
 
@@ -333,7 +253,6 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
         // cout << "Mass of fragment " << i << ": " << fragmentMass << endl;
     }
 
-    // Free memory used by the diagram
     jcv_diagram_free(&diagram);
 
     for (auto point : points) {
@@ -376,7 +295,6 @@ int main() {
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 
-    // vertices and indices for the square sheet
     float squareSize = 1.0f;
     float halfSquareSize = squareSize / 2.0f;
     vector<Vertex> squareVertices = {
@@ -391,12 +309,12 @@ int main() {
     };
 
     vector<unsigned int> squareIndices = {
-        0, 1, 2, 2, 3, 0, // front
-        4, 5, 6, 6, 7, 4, // back
-        0, 1, 5, 5, 4, 0, // bottom
-        2, 3, 7, 7, 6, 2, // top
-        0, 3, 7, 7, 4, 0, // left
-        1, 2, 6, 6, 5, 1  // right
+        0, 1, 2, 2, 3, 0,
+        4, 5, 6, 6, 7, 4,
+        0, 1, 5, 5, 4, 0,
+        2, 3, 7, 7, 6, 2,
+        0, 3, 7, 7, 4, 0,
+        1, 2, 6, 6, 5, 1
     };
 
     vector<glm::vec2> square2DVertices = {
@@ -410,8 +328,16 @@ int main() {
 
     DestructibleObject Square3D(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
 
-    // Generate sphere mesh for bullet
-    Mesh sphereMesh = GenerateSphereMesh(0.05f, 36, 18);
+    // task 1
+    vector<glm::vec2> bulletVertices = {
+        glm::vec2(-halfSquareSize / 100, -halfSquareSize / 100),
+        glm::vec2(halfSquareSize / 100, -halfSquareSize / 100),
+        glm::vec2(halfSquareSize / 100, halfSquareSize / 100),
+        glm::vec2(-halfSquareSize / 100, halfSquareSize / 100)
+    };
+
+    Mesh bulletMesh = GenerateMesh(bulletVertices, -halfSquareSize / 100);
+
     vector<DestructibleObject> bullets;
 
     GLuint squareShader = LoadShaders("../shaders/RectangleVertexShader.vertexshader", "../shaders/RectangleFragmentShader.fragmentshader");
@@ -431,7 +357,6 @@ int main() {
     Mesh edgeMesh;
 
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
-        // Compute the MVP matrix from keyboard and mouse input
         computeMatricesFromInputs();
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
@@ -446,20 +371,18 @@ int main() {
         // Check for left mouse click to launch a new bullet
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             glm::vec3 bulletVelocity = cameraDirection * 10.0f; // Adjust the speed as necessary
-            bullets.push_back(DestructibleObject(sphereMesh, bulletPosition, bulletVelocity, 0.05f, false));
+            bullets.push_back(DestructibleObject(bulletMesh, bulletPosition, bulletVelocity, 0.05f, false));
             for (auto& destructibleObject : destructibleObjects) {
                 destructibleObject.affectedByGravity = true;
             }
             Square3D.affectedByGravity = true;
         }
 
-        // Check for 'R' key press to create a new complete square and reset camera position and angle
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             destructibleObjects.clear();
             voronoiGenerated = false;
             Square3D = DestructibleObject(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
-            collisionDetected = false; // Reset collision
-            // Reset camera position and angle
+            collisionDetected = false;
             setCameraPosition(glm::vec3(0, 0, 3));
             setCameraDirection(3.14f, 0.0f);
         }
@@ -469,7 +392,7 @@ int main() {
         for (auto it = bullets.begin(); it != bullets.end();) {
             it->Update(1.0f / fps);
             if (isOutsideBoundingBox(it->position, boundingBoxSize)) {
-                it = bullets.erase(it); // Remove bullet if outside bounding box
+                it = bullets.erase(it);
             }
             else {
                 it->Draw(sphereShader, ViewMatrix, ProjectionMatrix);
@@ -477,7 +400,6 @@ int main() {
             }
         }
 
-        // Draw the aiming dot at the center of the screen
         drawAimingDot(dotShader);
 
         // task 1
@@ -543,12 +465,10 @@ int main() {
         glEnable(GL_DEPTH_TEST);
 
         // task 7
-        // Draw the 3D square or the destructible objects
         if (!voronoiGenerated) {
             Square3D.Draw(squareShader, ViewMatrix, ProjectionMatrix);
         }
         else {
-            // Draw the destructible objects
             for (auto& destructibleObject : destructibleObjects) {
                 destructibleObject.Draw(squareShader, ViewMatrix, ProjectionMatrix);
             }

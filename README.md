@@ -2,13 +2,9 @@
 
 ## Description
 The program shateki simulates flat sheet fracture with Voronoi diagram and mesh generation.
-
 It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
-
 After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions. Pressing 2 key and shoot the same time to see voronoi not centered in the bounding box. Pressing F key shows the voronoi points, edges. 
-
 After the voronoi diagram is generated, it generates front and back polygon, and gap vertically between the front and back polygon, so each voronoi diagram gets depth and turns from 2D to 3D. Pressing F key also shows the mesh generated for the 2D voronoid diagram. Each voronoi region is made to a Destructible Object and mesh is generated for each of them. Each Destructible Object is assigned a random color at construction, so that it will be easier to visualize the fracture. After the new objects are created and meshes are assigned to them, the new objects fall and move based on bullet mass, velocity, and the new object's mass. 
-
 There is a 20 * 20 bounding box around the scene. If the bullet or fragments get outside the bounding box, they will disappear and be cleaned. pressing R key can reset the square back complete in the center of the space and reset the camera position and direction back to the initial value.
 
 ## Compilation and running
@@ -34,76 +30,12 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 - It also has a random color at construction for seeing different objects more clearly.
 
 #### Object destruction algorithm [2]
-```Algorithm 1 Object Destruction
-1: procedure **Fracture**(Destructible obj, Point hitposition, List objectlist)
-   // obj is the object to destroy, hitposition is the impact location on the
-   // object, objectlist is where new objects will be added
-2:    p ← Randomized point list
-3:    Move p towards hitposition
-4:
-5:
-6:    ClipPolygon ← obj.mesh.polygon
-      // Get the polygon from the mesh
-7:    Diagram ← GenerateDiagram(p, ClipPolygon)
-      // Generate clipped Voronoi diagram
-8:
-9:    for each site ∈ Diagram do
-10:       newObj as new Destructible object
-11:       newObj.mesh ← GenerateMesh(site.vertices, obj.scale)
-12:       Send newObj.mesh to GPU
-13:       newObj.mesh.polygon ← site.vertices
-14:       objectlist ← newObj
-15:
-16:    Mark obj for removal
-```
 - The pseudocode is used in main() in shateki.cpp to generate voronoi diagram pattern, make each site a new Destructible object, and generate mesh for them.
 
 #### Mesh
 - Mesh is defined to represent 3D objects. We can draw the 2D plane, and generate mesh for it by giving a list of Vertex and indices. Mesh has a list of Vertices and Indices to draw vertices based on indices. We want to draw point, edge, triangle in 3D, we use the drawAsPoints flag or the number of indices to decide. We use Mesh to bind buffer data.
 - Vertex structure stores the position, color. 
 #### Mesh Creation algorithm [2]
-```Algorithm 2 Mesh Creation
-1: procedure **GenerateMesh**(Site Vertices PointList, Scale scale)
-   // The received PointList is in a x, y format, it is the job of this
-   // function to convert this into three dimensions with z being based
-   // on the received scale.
-2:
-3:    Initialize new VertexList
-4:
-5:    // This is the front polygon
-6:    for each p ∈ PointList do
-7:        Initialize v ← (p, scale) as new vertex
-8:        v.normal ← ZPositive
-9:        Add v to VertexList
-10:
-11:   // This is the back polygon
-12:   for each p ∈ PointList do
-13:       Initialize v ← (p, -scale) as new vertex
-14:       v.normal ← ZNegative
-15:       Add v to VertexList
-16:
-17:   // These are the gap polygons
-18:   for i < PointList.size do
-19:       // Using j as a step ahead in point list
-20:       j = i + 1
-21:       if i = PointList.size - 1 then
-22:           j = 0
-23:
-24:       Initialize v1, v2, v3, v4 as new vertices
-25:       v1 ← (PointList[i], scale)
-26:       v2 ← (PointList[j], scale)
-27:       v3 ← (PointList[j], -scale)
-28:       v4 ← (PointList[i], -scale)
-29:       v1, v2, v3, v4.normal ← CrossProduct(v1 - v4, ZPositive)
-30:       Add v1, v2, v3, v4 to VertexList
-31:
-32:   // Though any triangulation method can be used to create a face list for
-33:   // these vertices, the simple method of connecting every 3 vertices of
-34:   // each polygon is used since they are all convex.
-35:
-36:   mesh ← VertexList Initialize a new mesh
-37:   return mesh
-```
 - The pseudocode is used to define Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) by adding z value for each vertex, and connect every four vertices to form a face.
 
 ### Platform and system dependence, external libraries
@@ -121,9 +53,10 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 
 ### Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
 The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org.
+VoronoiDiagram.h, VoronoiDiagramClip.h are based on the jc_voronoi library.
 
 ### Caveats, assumptions
-- Assume the velocity of bullet is 10.0 magnitude to camera direction.
+- Assume the velocity of bullet is 10.0 magnitude to camera direction, and bullet is a super small cuboid.
 - Assume conservation of momentum is used to determine the velocity of fragments after collision.
 - Fragments velocity is scaled down by 0.1 to avoid too fast speed because bullet velocity is fast and fragments are light.
 - A new bullet is able to be fired every time left mouse is clicked. 
@@ -141,7 +74,6 @@ The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org
 - Assume the number of random points to generate and used as voronoi diagram's sites is 50.
 - Assume random points are generated with x and y coordinates in the range of [-0.1, 0.1] to the impact point.
 - Assume voronoi point size is 3.0.
-<!-- - jc voronoi for now -->
 - Assume the z value of square sheet is in the range of [-0.1, 0.1].
 - Assume gravity is 0.1 to negative y.
 - Assume fps is 120.
