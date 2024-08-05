@@ -24,18 +24,85 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 
 ## Implementation
 ### Algorithms, data structures, and complexities
-- Voronoi Diagram
+#### Voronoi Diagram [1]
 ...............
-- Fortune's Sweepline algorithm
-..............., nlog(n), faster than flip edge algorithm using delaunay triangle
-- Destructible Object
-...............
-- Mesh
-...............
-- Object destruction algorithm
-...............
-- Mesh Creation algorithm
-...............
+#### Fortune's Sweepline algorithm [1]
+..............
+- O(nlog(n)), faster than flip edge algorithm using delaunay triangle
+#### Destructible Object
+- Destructible Object is defined for destructible 3D objects. It follows physics rules, so it has mass, porition, velocity, and whether affected by gravity. Bullet is set to have no gravity for simplicity. It has update() get called every frame, so position and velocity can be updated here.
+- It also has a random color at construction for seeing different objects more clearly.
+
+#### Object destruction algorithm [2]
+```Algorithm 1 Object Destruction
+1: procedure **Fracture**(Destructible obj, Point hitposition, List objectlist)
+   // obj is the object to destroy, hitposition is the impact location on the
+   // object, objectlist is where new objects will be added
+2:    p ← Randomized point list
+3:    Move p towards hitposition
+4:
+5:
+6:    ClipPolygon ← obj.mesh.polygon
+      // Get the polygon from the mesh
+7:    Diagram ← GenerateDiagram(p, ClipPolygon)
+      // Generate clipped Voronoi diagram
+8:
+9:    for each site ∈ Diagram do
+10:       newObj as new Destructible object
+11:       newObj.mesh ← GenerateMesh(site.vertices, obj.scale)
+12:       Send newObj.mesh to GPU
+13:       newObj.mesh.polygon ← site.vertices
+14:       objectlist ← newObj
+15:
+16:    Mark obj for removal```
+- The pseudocode is used in main() in shateki.cpp to generate voronoi diagram pattern, make each site a new Destructible object, and generate mesh for them.
+
+#### Mesh
+- Mesh is defined to represent 3D objects. We can draw the 2D plane, and generate mesh for it by giving a list of Vertex and indices. Mesh has a list of Vertices and Indices to draw vertices based on indices. We want to draw point, edge, triangle in 3D, we use the drawAsPoints flag or the number of indices to decide. We use Mesh to bind buffer data.
+- Vertex structure stores the position, color. 
+#### Mesh Creation algorithm [2]
+```Algorithm 2 Mesh Creation
+1: procedure **GenerateMesh**(Site Vertices PointList, Scale scale)
+   // The received PointList is in a x, y format, it is the job of this
+   // function to convert this into three dimensions with z being based
+   // on the received scale.
+2:
+3:    Initialize new VertexList
+4:
+5:    // This is the front polygon
+6:    for each p ∈ PointList do
+7:        Initialize v ← (p, scale) as new vertex
+8:        v.normal ← ZPositive
+9:        Add v to VertexList
+10:
+11:   // This is the back polygon
+12:   for each p ∈ PointList do
+13:       Initialize v ← (p, -scale) as new vertex
+14:       v.normal ← ZNegative
+15:       Add v to VertexList
+16:
+17:   // These are the gap polygons
+18:   for i < PointList.size do
+19:       // Using j as a step ahead in point list
+20:       j = i + 1
+21:       if i = PointList.size - 1 then
+22:           j = 0
+23:
+24:       Initialize v1, v2, v3, v4 as new vertices
+25:       v1 ← (PointList[i], scale)
+26:       v2 ← (PointList[j], scale)
+27:       v3 ← (PointList[j], -scale)
+28:       v4 ← (PointList[i], -scale)
+29:       v1, v2, v3, v4.normal ← CrossProduct(v1 - v4, ZPositive)
+30:       Add v1, v2, v3, v4 to VertexList
+31:
+32:   // Though any triangulation method can be used to create a face list for
+33:   // these vertices, the simple method of connecting every 3 vertices of
+34:   // each polygon is used since they are all convex.
+35:
+36:   mesh ← VertexList Initialize a new mesh
+37:   return mesh```
+- The pseudocode is used to define Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) by adding z value for each vertex, and connect every four vertices to form a face.
 
 ### Platform and system dependence, external libraries
 - The program is written and tested on Microsoft Windows 11 Home, Version 10.0.22631 Build 22631, with NVIDIA GeForce RTX 4060 Laptop GPU, in Microsoft Visual Studio Community 2022 (64-bit) Version 17.9.6. 
@@ -97,7 +164,9 @@ The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org
 8. Make new objects move following velocity and update every loop (completed).
 
 ## References
+[1] Voronoi Diagram and Delaunay Triangulation in O(n log n) with Fortune's Algorithm. https://codeforces.com/blog/entry/85638. 
 
+[2] Jerry Ronnegren. 2020. Real Time Mesh Fracturing Using 2D Voronoi Diagrams. https://urn.kb.se/resolve?urn=urn:nbn:se:bth-20161.
 
 
 
