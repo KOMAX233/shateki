@@ -411,7 +411,7 @@ int main() {
         glm::mat4 ProjectionMatrix = getProjectionMatrix();
         glm::mat4 ViewMatrix = getViewMatrix();
         glm::vec3 cameraPosition = getCameraPosition();
-        glm::vec3 bulletPosition = { cameraPosition.x, cameraPosition.y, cameraPosition.z + 1.0f };
+        glm::vec3 bulletPosition = cameraPosition + glm::normalize(getCameraDirection()) * 1.0f;
         glm::vec3 cameraDirection = getCameraDirection();
         glm::mat4 ModelMatrix = glm::mat4(1.0f);
 
