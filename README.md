@@ -25,10 +25,10 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 ## Implementation
 ### Algorithms, data structures, and complexities
 #### Voronoi Diagram [1]
-...............
+- Voronoi diagram is defined for split a 2D plane into regions. 
 #### Fortune's Sweepline algorithm [1]
-..............
-- O(nlog(n)), faster than flip edge algorithm using delaunay triangle
+- Fortune's Sweepline algorithm is used for its efficiency. It has a time complexity of O(nlog(n)), which is faster than flip edge algorithm using delaunay triangle.
+- Every time a sweepline passes points, arcs are created such that all points should be closest to the center point, site. An arc leaves the line when a circle event occurs, and the arc reaches the farthest part of the circle.
 #### Destructible Object
 - Destructible Object is defined for destructible 3D objects. It follows physics rules, so it has mass, porition, velocity, and whether affected by gravity. Bullet is set to have no gravity for simplicity. It has update() get called every frame, so position and velocity can be updated here.
 - It also has a random color at construction for seeing different objects more clearly.
@@ -169,88 +169,3 @@ The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org
 [1] Voronoi Diagram and Delaunay Triangulation in O(n log n) with Fortune's Algorithm. https://codeforces.com/blog/entry/85638. 
 
 [2] Jerry Ronnegren. 2020. Real Time Mesh Fracturing Using 2D Voronoi Diagrams. https://urn.kb.se/resolve?urn=urn:nbn:se:bth-20161.
-
-
-
-
-<!-- 
-## Specification
-
-
-
-The Voronoi diagram generation in the provided code is based on Fortune's algorithm, which is an efficient, sweep-line algorithm for generating Voronoi diagrams. Fortune's algorithm has a time complexity of \(O(n \log n)\), making it suitable for handling a large number of points. Below, I'll explain the key concepts and steps involved in Fortune's algorithm as implemented in the provided code.
-
-### Key Concepts
-
-1. **Voronoi Diagram**: A partitioning of a plane into regions based on distance to a specific set of points. Each region corresponds to one point and consists of all locations closer to that point than to any other.
-
-2. **Sweep Line**: An imaginary line that sweeps across the plane from top to bottom. As the line moves, it processes events (either site events or circle events).
-
-3. **Beach Line**: A complex structure maintained by the algorithm that represents the boundary of the regions being formed by the sweep line. It consists of parabolic arcs, where each arc corresponds to a site that has been processed but whose Voronoi region has not been fully completed.
-
-4. **Priority Queue**: Used to manage the events. Site events are associated with the sites to be processed, and circle events are associated with the points where three parabolic arcs meet.
-
-### Steps of the Algorithm
-
-1. **Initialization**: 
-   - Sites (points) are sorted and stored in a priority queue.
-   - The beach line is initialized with two dummy nodes representing the start and end.
-
-2. **Processing Events**:
-   - The main loop processes events from the priority queue until it is empty.
-   - **Site Event**: Occurs when the sweep line encounters a new site (point).
-     - A new arc is added to the beach line.
-     - New edges are created between the new site and neighboring arcs.
-     - Potential circle events are calculated and added to the priority queue.
-   - **Circle Event**: Occurs when three arcs meet, indicating a vertex of the Voronoi diagram.
-     - The middle arc is removed from the beach line.
-     - The circle event creates a new vertex for the Voronoi diagram and finalizes edges.
-     - Potential new circle events are calculated and added to the priority queue.
-
-3. **Finalization**: 
-   - After all events are processed, the remaining arcs in the beach line are used to finalize the remaining edges of the Voronoi diagram.
-   - Special handling is done to ensure all edges are within the bounding box.
-
-4. **Clipping and Filling Gaps**:
-   - The edges of the Voronoi diagram are clipped to the bounding box.
-   - Any gaps at the borders are filled to ensure the diagram is complete and correctly bounded.
-
-### Core Functions
-
-- **`jcv_site_event`**: Handles the addition of a new site event.
-- **`jcv_circle_event`**: Handles the removal of an arc and creation of a circle event.
-- **`jcv_halfedge_new`**: Manages the creation and linking of new half-edges in the beach line.
-- **`jcv_pq_*` Functions**: Manage the priority queue operations.
-- **`jcv_edge_clipline`**: Clips the edges to the bounding box.
-- **`jcv_finishline`**: Finalizes edges by intersecting them with the bounding box.
-
-### Summary
-
-Fortune's algorithm efficiently constructs a Voronoi diagram by sweeping a line across the plane and maintaining the beach line and a priority queue of events. The provided code implements this algorithm with additional functionality for clipping and managing memory, ensuring the generated diagram is correctly bounded and efficiently handled. -->
-
-
-
-i'll start with obective 2 and put 1 as last, because its the last one being implemented
-2 Construct Voronoi diagram generation function with a given number of seeds (completed).
-data structures like sites, diagram are defined in order to store the generated diagram and data structures like priority queue and sweepline are used for fortune's sweepline algorithm. the diagram generation is based on fortune's sweepline algorithm.
-when you press key 2, and try shooting the object, the sites of the diagram can be anywhere on the 0.5 by 0.5 2d plane.
-when you press f you can see the voronoi diagram with sites and edges drawn on the orgiinal location even the new objects move with velocity implemented later.
-we can press r to reset camera position and direction, remove old objects and bullets and create new ones.
-3 Generate a list of random points on the 2D sheet, move them towards the impact point, and generate Voronoi diagram based on the points (completed).
-we bound the randomly generated points within a 0.1 by 0.1 bounding box so the diagram simulates object fracture more realisticlly
-4 Create new objects for each cell in the Voronoi diagram (completed).
-when i tried to test the square has been split into new regions, i moved the regions with all vetices <0  to the left and >0 to the right in x direction and same for y. we can see they are already splitted.
-5 Set depth Z in the direction of normals with given value to every seed and add the new vertice to vertice list (completed).
-on the side of the square sheet, we can see where the 2d plane was by pressing f. it's in the middle of the two surfaces, with the depth value we assign.
-6 Create gap polygons between the front and back surface by setting 4 vertices and add to vertice list (completed).
-on the side, gap polygons are formed using two vertices on the square and assign them a positive and negative depth as z.
-7 Connect every 3 vertices to create mesh and assign the mesh to the new objects, add new objects and remove old objects from object list(completed).
-since each region has its vertices and are polygons, we connect every 3 vertices to form a triangle and therefore fill the whole polygon, which forms the front, back , gap surface.
-8 Make new objects move following velocity and update every loop (completed).
-mass and velocity are added to destructible objects
-we can use wasd to move around, and see the new objects moving.
-1 Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).
-we add bullet as a sphere mesh last, and checked is the distance closer than the sum of radius for collision, and find an imapct point.
-impact point was set to 0,0 and fracture is triggered when left click mouse, and now we can use the actual bullet collision to trigger fracture.
-an extra feature is added. we assign random colors at object construction, so when they are fractured, we can see each fragments more clearly.
-that's all for my demo.
