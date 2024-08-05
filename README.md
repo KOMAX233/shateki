@@ -5,9 +5,9 @@ The program shateki simulates flat sheet fracture with Voronoi diagram and mesh 
 
 It starts with a thin square sheet in the center of the screen, a dot reticle for approximate aiming, and you can left click mouse to shoot bullets. You can use WASD keys to move around and shoot at the sheet. When the bullet collides with the sheet, it determines the impact point of the collision. 
 
-After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions.
+After finding the impact point, it generates a given number of random points within a 0.2 * 0.2 box as the sites for voronoi diagram generation, and the number is set to 50 in the code as default. It generates a voronoi diagram given the points, bounding box(square sheet), and we get information about sites, vertices and edges list for each voronoi regions. Pressing F key shows the voronoi points, edges.
 
-After the voronoi diagram is generated, it generates front and back polygon, and gap vertically between the front and back polygon, so each voronoi diagram gets depth and turns from 2D to 3D. Each voronoi region is made to a Destructible Object and mesh is generated for each of them. Each Destructible Object is assigned a random color at construction, so that it will be easier to visualize the fracture. After the new objects are created and meshes are assigned to them, the new objects fall and move based on bullet mass, velocity, and the new object's mass.
+After the voronoi diagram is generated, it generates front and back polygon, and gap vertically between the front and back polygon, so each voronoi diagram gets depth and turns from 2D to 3D. Pressing F key also shows the mesh generated for the 2D voronoid diagram. Each voronoi region is made to a Destructible Object and mesh is generated for each of them. Each Destructible Object is assigned a random color at construction, so that it will be easier to visualize the fracture. After the new objects are created and meshes are assigned to them, the new objects fall and move based on bullet mass, velocity, and the new object's mass. 
 
 There is a 20 * 20 bounding box around the scene. If the bullet or fragments get outside the bounding box, they will disappear and be cleaned. pressing R key can reset the square back complete in the center of the space and reset the camera position and direction back to the initial value.
 
@@ -41,13 +41,13 @@ There is a 20 * 20 bounding box around the scene. If the bullet or fragments get
 - R key for resetting to complete square sheet, initial camera position and horizontal and vertical angles. If new objects are already created, they will be removed.
 - W/S key for moving forth and back, so you get closer or farther to the sheet.
 - A/D key for moving left and right.
+- F key for showing voronoi sites, edges, and square with depth.
 - Left click mouse for shooting bullet. Multiple bullets can be fired when holding left click.
 
 ### Data and code sources, the re-use and adaptation of existing code, any acknowledgment of external sources.
 The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org.
 
 ### Caveats, assumptions
-#### Task 1
 - Assume the velocity of bullet is 10.0 magnitude to camera direction.
 - Assume conservation of momentum is used to determine the velocity of fragments after collision.
 - Fragments velocity is scaled down by 0.1 to avoid too fast speed because bullet velocity is fast and fragments are light.
@@ -56,41 +56,22 @@ The controls.hpp/cpp, shaders.hpp/cpp in common/ are made by opengl-tutorial.org
 - Assume bullet is not affected by gravity, and a flag is added for destructible object to decide if it has gravity.
 - Assume Destructible objects that have graivty only move to the direction of gravity after it's destructed and voronoi diagram is generated.
 - Assume bullet won't break, and won't collide with or break each other. New fragment objects won't collide and break each other.
-- Assume bullet initial position is cameraposition moving back 1.0.
+- Assume bullet initial position is cameraposition moving forward 1.0.
 - Assume an Destructible object can only be fractured once, so shooting on fragments won't break them.
 - Assume random color are assigned at Destructible object construction to see the fragments more clearly.
-#### Task 2
+- Assume the aiming dot size is 0.01 * 0.01.
 - Before bullet and collision are implemented, impact point is assumed to be (0, 0), the center of the 2D plane.
 - Voronoi diagram is implemented with Fortune's Sweepline algorithm.
 - Assume camera's initial position is (0, 0, 3), horizontal angle is 3.14, and verticle angle is 0.0.
-#### Task 3
 - Assume the number of random points to generate and used as voronoi diagram's sites is 50.
 - Assume random points are generated with x and y coordinates in the range of [-0.1, 0.1] to the impact point.
-<!-- - Assume point size is 3.0. -->
-#### Task 4
-<!-- - after getting the intersections, check other vertices on the same edge, if it has other vertices on the same edge that's not corner 0.5/-0.5, connect to the one next to them, if they don't have neighbor on the same edge connect them to the corner, if theres only one vertex intersected on a square edge, genreate one to the left and one to the right. 
-
-create a new edge list
-add the new edges to the edge list with the edges from the output of compute voronoi edges
-
-create a new point list, add the vertices of all edges
-
-now all edges should be able to used for construct a region, start from one vertex, check the edges to get the next point connect to it, stop when find edge that connect back to the first point, now the edges and vertices that can a circle is used as one destructible object.
-
-repeat until sites number of new objects have been found, then pass the objects to generate mesh
-
-jc voronoi for now -->
-#### Task 5
+- Assume voronoi point size is 3.0.
+<!-- - jc voronoi for now -->
 - Assume the z value of square sheet is in the range of [-0.1, 0.1].
-#### Task 6
-- add boundry edges gap polygon and vertices if x or y is equal to size of square 0.5
-#### Task 7
-
-#### Task 8
 - Assume gravity is 0.1 to negative y.
 - Assume fps is 120.
 - Assume the mass of each objects created from voronoi diagram is the area of region because they are all flat sheet with same depth.
-
+- Shooting on very side of the object sometimes won't break it and have to move a little to the center.
 ## Objectives
 
 1. Detect collisions between the bullet and the 2D sheet, and find the impact location (completed).

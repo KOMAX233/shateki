@@ -23,6 +23,7 @@ using namespace std;
 GLFWwindow* window;
 float fps = 120.0f;
 
+// task 3
 struct VoronoiPoint {
     float x, y;
     VoronoiPoint(float x, float y) : x(x), y(y) {}
@@ -60,6 +61,7 @@ void printVoronoiRegions(const jcv_diagram& diagram) {
     }
 }
 
+// task 8
 float getMass(const std::vector<glm::vec2>& vertices) {
     float area = 0.0f;
     int n = vertices.size();
@@ -76,6 +78,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
+    // task 5
     // Front polygon at z=scale
     for (const auto& point : pointList) {
         Vertex v(glm::vec3(point.x, point.y, scale), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f));
@@ -88,6 +91,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
         vertices.push_back(v);
     }
 
+    // task 7
     // Front polygon indices (triangulation)
     if (pointList.size() > 2) {
         for (size_t i = 1; i < pointList.size() - 1; ++i) {
@@ -107,6 +111,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
         }
     }
 
+    // task 6
     // Gap polygons indices
     for (size_t i = 0; i < pointList.size(); ++i) {
         size_t j = (i + 1) % pointList.size();
@@ -127,6 +132,7 @@ Mesh GenerateMesh(const std::vector<glm::vec2>& pointList, float scale) {
     return Mesh(vertices, indices);
 }
 
+// task 1
 Mesh GenerateSphereMesh(float radius, int sectorCount, int stackCount) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
@@ -229,8 +235,17 @@ void drawAimingDot(GLuint shader) {
     dotMesh.Draw(shader);
 }
 
-void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh, const glm::vec3& bulletVelocity, float bulletMass) {
+// task 3
+void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, const glm::vec3& impactPoint, float halfSquareSize, const Mesh& squareMesh, const glm::vec3& bulletVelocity, float bulletMass, Mesh& pointMesh, Mesh& edgeMesh) {
+    // generate 50 random points as sites
     vector<VoronoiPoint*> points = generateRandomPoints(50, impactPoint.x - 0.1f, impactPoint.x + 0.1f, impactPoint.y - 0.1f, impactPoint.y + 0.1f);
+    
+    // add to point mesh
+    vector<Vertex> pointVertices;
+    for (const auto& point : points) {
+        pointVertices.push_back(Vertex(glm::vec3(point->x, point->y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
+    }
+    pointMesh = Mesh(pointVertices, {}, true);
 
     // Define the bounding box (square)
     jcv_rect bounding_box;
@@ -262,6 +277,8 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
         edgeVertices.push_back(Vertex(glm::vec3(edge->pos[1].x, edge->pos[1].y, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(0.0f, 0.0f)));
         edge = edge->next;
     }
+
+    edgeMesh = Mesh(edgeVertices, {});
 
     destructibleObjects.clear(); // Clear old objects
 
@@ -320,8 +337,6 @@ void createVoronoiFromImpact(vector<DestructibleObject>& destructibleObjects, co
 }
 
 int main() {
-    srand(static_cast<unsigned>(time(0))); // Seed the random number generator
-
     if (!glfwInit()) {
         cerr << "Failed to initialize GLFW\n";
         return -1;
@@ -356,7 +371,7 @@ int main() {
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
     glEnable(GL_DEPTH_TEST);
 
-    // 2D plane vertices and indices for the initial square
+    // vertices and indices for the square sheet
     float squareSize = 1.0f;
     float halfSquareSize = squareSize / 2.0f;
     vector<Vertex> squareVertices = {
@@ -388,7 +403,7 @@ int main() {
 
     Mesh squareMesh = GenerateMesh(square2DVertices, 0.1f);
 
-    DestructibleObject originalSquare(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
+    DestructibleObject Square3D(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
 
     // Generate sphere mesh for bullet
     Mesh sphereMesh = GenerateSphereMesh(0.05f, 36, 18);
@@ -405,6 +420,11 @@ int main() {
     float boundingBoxSize = 10.0f; // Bounding box size
     bool collisionDetected = false; // Track collision
 
+    // task 3
+    // Define point and edge mesh outside the loop
+    Mesh pointMesh;
+    Mesh edgeMesh;
+
     while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && !glfwWindowShouldClose(window)) {
         // Compute the MVP matrix from keyboard and mouse input
         computeMatricesFromInputs();
@@ -417,6 +437,7 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // task 1
         // Check for left mouse click to launch a new bullet
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
             glm::vec3 bulletVelocity = cameraDirection * 10.0f; // Adjust the speed as necessary
@@ -424,20 +445,21 @@ int main() {
             for (auto& destructibleObject : destructibleObjects) {
                 destructibleObject.affectedByGravity = true;
             }
-            originalSquare.affectedByGravity = true;
+            Square3D.affectedByGravity = true;
         }
 
         // Check for 'R' key press to create a new complete square and reset camera position and angle
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             destructibleObjects.clear();
             voronoiGenerated = false;
-            originalSquare = DestructibleObject(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
+            Square3D = DestructibleObject(squareMesh, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), getMass(square2DVertices), false);
             collisionDetected = false; // Reset collision
             // Reset camera position and angle
             setCameraPosition(glm::vec3(0, 0, 3));
             setCameraDirection(3.14f, 0.0f);
         }
 
+        // task 1
         // Update and draw bullets
         for (auto it = bullets.begin(); it != bullets.end();) {
             it->Update(1.0f / fps);
@@ -453,18 +475,20 @@ int main() {
         // Draw the aiming dot at the center of the screen
         drawAimingDot(dotShader);
 
+        // task 1
         // Check for collision between bullets and the original square
         if (!collisionDetected) {
             for (auto& bullet : bullets) {
-                if (originalSquare.CheckCollision(bullet)) {
+                if (Square3D.CheckCollision(bullet)) {
                     collisionDetected = true; // Stop checking further collisions
                     voronoiGenerated = true;
-                    createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh, bullet.velocity, bullet.mass);
+                    createVoronoiFromImpact(destructibleObjects, bullet.position, halfSquareSize, squareMesh, bullet.velocity, bullet.mass, pointMesh, edgeMesh);
                     break;
                 }
             }
         }
 
+        // task 8
         // Update positions of destructible objects
         float deltaTime = 1.0f / fps;
         for (auto it = destructibleObjects.begin(); it != destructibleObjects.end();) {
@@ -478,9 +502,45 @@ int main() {
             }
         }
 
-        // Draw the original square or the destructible objects
+        // task 7
+        // Draw square
+        glUseProgram(squareShader);
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(squareShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            squareMesh.Draw(squareShader);
+        }
+
+        // task 3
+        // Draw points
+        glDisable(GL_DEPTH_TEST);
+        glUseProgram(pointShader);
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(pointShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        glPointSize(3.0f);
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            pointMesh.Draw(pointShader);
+        }
+        glEnable(GL_DEPTH_TEST);
+
+        // task 3
+        // Draw edges
+        glDisable(GL_DEPTH_TEST);
+        glUseProgram(edgeShader);
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "model"), 1, GL_FALSE, glm::value_ptr(ModelMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "view"), 1, GL_FALSE, glm::value_ptr(ViewMatrix));
+        glUniformMatrix4fv(glGetUniformLocation(edgeShader, "projection"), 1, GL_FALSE, glm::value_ptr(ProjectionMatrix));
+        if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS) {
+            edgeMesh.Draw(edgeShader);
+        }
+        glEnable(GL_DEPTH_TEST);
+
+        // task 7
+        // Draw the 3D square or the destructible objects
         if (!voronoiGenerated) {
-            originalSquare.Draw(squareShader, ViewMatrix, ProjectionMatrix);
+            Square3D.Draw(squareShader, ViewMatrix, ProjectionMatrix);
         }
         else {
             // Draw the destructible objects

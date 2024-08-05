@@ -51,6 +51,7 @@ add_executable(shateki
     src/VoronoiDiagramClip.h
     src/Mesh.cpp
     src/Mesh.h
+    src/DestructibleObject.h
     common/shader.cpp
     common/shader.hpp
     common/controls.cpp

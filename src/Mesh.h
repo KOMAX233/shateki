@@ -1,3 +1,4 @@
+// task 7
 #ifndef MESH_H
 #define MESH_H
 
@@ -21,6 +22,8 @@ public:
     std::vector<unsigned int> indices;
     GLuint VAO;
     bool drawAsPoints;
+
+    Mesh() = default;
 
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, bool drawAsPoints = false);
 

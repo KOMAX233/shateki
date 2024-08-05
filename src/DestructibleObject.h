@@ -1,3 +1,4 @@
+// task 4
 #ifndef DESTRUCTIBLE_OBJECT_H
 #define DESTRUCTIBLE_OBJECT_H
 
@@ -44,6 +45,7 @@ public:
         mesh.Draw(shader);
     }
 
+    // task 1
     bool CheckCollision(const DestructibleObject& other) const {
         float distance = glm::length(position - other.position);
         float combinedRadius = 0.05f + 0.5f;
